@@ -18,9 +18,11 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(MessageOpenCloseTerminal.Handler.class, MessageOpenCloseTerminal.class, id++, Side.CLIENT);
         INSTANCE.registerMessage(MessageOpenCloseTerminal.Handler.class, MessageOpenCloseTerminal.class, id++, Side.SERVER);
 
-        INSTANCE.registerMessage(MessageTerminalCommand.Handler.class, MessageTerminalCommand.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageCommand.Handler.class, MessageCommand.class, id++, Side.SERVER);
 
-        INSTANCE.registerMessage(MessageTerminalPrint.Handler.class, MessageTerminalPrint.class, id++, Side.CLIENT);
+        INSTANCE.registerMessage(MessagePrint.Handler.class, MessagePrint.class, id++, Side.CLIENT);
+
+        INSTANCE.registerMessage(MessageByte.Handler.class, MessageByte.class, id++, Side.SERVER);
     }
 
 }

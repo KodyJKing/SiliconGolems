@@ -1,7 +1,11 @@
 package silicongolems.scripting.js;
 
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import silicongolems.common.Common;
 import silicongolems.entity.EntitySiliconGolem;
 
 public class WrapperGolem {
@@ -14,17 +18,46 @@ public class WrapperGolem {
 
     public void turn(float angle){
         golem.rotationYawHead += angle;
-        golem.rotationYaw += angle;
+        golem.rotationYaw = golem.rotationYawHead;
     }
 
     public void move(){
-        float x = -MathHelper.sin(golem.rotationYaw * 0.017453292F);
-        float z = MathHelper.cos(golem.rotationYaw * 0.017453292F);
-        golem.posX += x;
-        golem.posY += z;
+        float dx = -MathHelper.sin(golem.rotationYaw * 0.017453292F);
+        float dz = MathHelper.cos(golem.rotationYaw * 0.017453292F);
+        golem.moveEntity(dx, 0, dz);
+        sleep(250);
+    }
+
+    public void jump(){
+        if(!golem.onGround)
+            return;
+        golem.motionY = 0.42;
+        sleep(250);
     }
 
     public void snap(){
-        golem.setLocationAndAngles(Math.floor(golem.posX) + 0.5, Math.floor(golem.posY) + 0.5, Math.floor(golem.posX) + 0.5, 0 ,0);
+        golem.setPosition(Math.floor(golem.posX) + 0.5,  golem.posY, Math.floor(golem.posZ) + 0.5);
+    }
+
+    public void align(){
+        golem.rotationYawHead = Math.round(golem.rotationYawHead / 90) * 90;
+        golem.rotationYaw = golem.rotationYawHead;
+    }
+
+    public void build(int forward, int up, int right){
+        right = Common.clamp(-1, 1, right);
+        up = Common.clamp(-1, 1, up);
+        forward = Common.clamp(-1, 1, forward);
+
+        EnumFacing forwardFacing = golem.getHorizontalFacing();
+        EnumFacing rightFacing = forwardFacing.rotateY();
+
+        BlockPos pos = new BlockPos(golem).offset(forwardFacing, forward).offset(rightFacing, right).add(0, up, 0);
+
+        golem.worldObj.setBlockState(pos, Blocks.STONEBRICK.getDefaultState());
+    }
+
+    private void sleep(int milis){
+        try{ Thread.sleep(milis); } catch (Exception e) {e.printStackTrace();}
     }
 }

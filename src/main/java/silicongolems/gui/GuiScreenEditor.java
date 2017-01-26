@@ -25,6 +25,7 @@ public class GuiScreenEditor extends GuiScreenText {
         scrollY = 0;
         this.computer = computer;
         editor.type(computer.activeFile);
+        clampScroll();
     }
 
     @Override
@@ -75,6 +76,13 @@ public class GuiScreenEditor extends GuiScreenText {
         editor.moveCursorY(0);
         editor.moveCursorY(0);
         clampScroll();
+    }
+
+    @Override
+    public boolean onEscape() {
+        Minecraft.getMinecraft().displayGuiScreen(null);
+        computer.openTerminalGui(Minecraft.getMinecraft().thePlayer);
+        return true;
     }
 
     @Override

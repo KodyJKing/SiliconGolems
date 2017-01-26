@@ -6,10 +6,9 @@ import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
 import silicongolems.gui.texteditor.TextEditor;
 import silicongolems.network.MessageOpenCloseTerminal;
-import silicongolems.network.MessageTerminalCommand;
+import silicongolems.network.MessageCommand;
 import silicongolems.network.ModPacketHandler;
 
-import java.util.ArrayList;
 import java.util.Stack;
 
 public class GuiScreenTerminal extends GuiScreenText {
@@ -34,12 +33,12 @@ public class GuiScreenTerminal extends GuiScreenText {
         scrollX = 0;
     }
 
-    @Override
-    public void onGuiClosed() {
-        super.onGuiClosed();
-        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseTerminal(computer));
-        Computers.remove(computer);
-    }
+//    @Override
+//    public void onGuiClosed() {
+//        super.onGuiClosed();
+//        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseTerminal(computer));
+//        Computers.remove(computer);
+//    }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -76,13 +75,20 @@ public class GuiScreenTerminal extends GuiScreenText {
     }
 
     @Override
+    public boolean onEscape() {
+        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseTerminal(computer));
+        Computers.remove(computer);
+        return false;
+    }
+
+    @Override
     public void onEnter() {
         String cmd = input.toString();
         cmdHistory.push(cmd);
         input.clear();
         cmdIndex = cmdHistory.size();
 
-        ModPacketHandler.INSTANCE.sendToServer(new MessageTerminalCommand(computer, cmd));
+        ModPacketHandler.INSTANCE.sendToServer(new MessageCommand(computer, cmd));
     }
 
     @Override

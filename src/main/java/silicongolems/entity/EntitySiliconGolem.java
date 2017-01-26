@@ -52,17 +52,26 @@ public class EntitySiliconGolem extends EntityLiving {
     @Override
     public void writeEntityToNBT(NBTTagCompound compound) {
         super.writeEntityToNBT(compound);
+        computer.writeNBT(compound);
     }
 
     @Override
     public void readEntityFromNBT(NBTTagCompound compound) {
         super.readEntityFromNBT(compound);
+        computer.readNBT(compound);
     }
 
     @Override
     public void onDeath(DamageSource cause) {
-        computer.onDestroy();
+        super.onDeath(cause);
+        computer.killProcess();
     }
+
+    @Override
+    protected void despawnEntity() {
+        super.despawnEntity();
+        computer.onDestroy();
+}
 
     // Boiler Plate Below -------------------------------------------
 

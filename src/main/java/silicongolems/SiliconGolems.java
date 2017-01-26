@@ -44,4 +44,20 @@ public class SiliconGolems
     public void postInit(FMLPostInitializationEvent event) {
         NetworkRegistry.INSTANCE.registerGuiHandler(instance, new ModGuiHandler());
     }
+
+    /*
+     * TODO:
+     *
+     * Priority 1:
+     * Move all gui's into one tabbed GuiScreenHost or GuiScreenOS.
+     * Clean up transition from editor screen to terminal. No packets should be sent.
+     *
+     * Priority 2:
+     * Implement a file system.
+     * Implement more os commands, possible move command handling into another class and 'OOPify' commands.
+     *
+     * Priority 3:
+     * Consider implementing a container so the server knows when the gui is open and closed.
+     * Consider text editor improvments: auto-indent, copy, mouse select, mouse drag.
+     */
 }
