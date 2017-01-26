@@ -37,8 +37,8 @@ public class GuiScreenTerminal extends GuiScreenText {
     @Override
     public void onGuiClosed() {
         super.onGuiClosed();
-        Computers.remove(computer);
         ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseTerminal(computer));
+        Computers.remove(computer);
     }
 
     @Override

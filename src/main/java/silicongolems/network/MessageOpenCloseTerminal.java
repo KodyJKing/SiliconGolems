@@ -14,21 +14,20 @@ import silicongolems.computer.Computers;
 
 import java.util.Stack;
 
-public class MessageOpenCloseTerminal implements IMessage {
+public class MessageOpenCloseTerminal extends MessageComputer {
 
-    int computerID;
     Stack<String> output;
 
     public MessageOpenCloseTerminal(){}
 
     public MessageOpenCloseTerminal(Computer computer){
-        computerID = computer.id;
+        super(computer);
         output = computer.output;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        computerID = buf.readInt();
+        super.fromBytes(buf);
 
         output = new Stack<String>();
         int size = buf.readInt();
@@ -38,32 +37,23 @@ public class MessageOpenCloseTerminal implements IMessage {
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(computerID);
+        super.toBytes(buf);
 
         buf.writeInt(output.size());
         for(String line : output)
             ByteBufUtils.writeUTF8String(buf, line);
     }
 
-    public static class Handler implements IMessageHandler<MessageOpenCloseTerminal, IMessage> {
+    public static class Handler extends MessageComputer.Handler<MessageOpenCloseTerminal> {
         @Override
-        public IMessage onMessage(MessageOpenCloseTerminal message, MessageContext ctx) {
-            if(ctx.side == Side.CLIENT){
-                onMessageClient(message);
-            } else {
-                Computer computer = Computers.getOrCreate(message.computerID, ctx.getServerHandler().playerEntity.worldObj);
-                computer.user = null;
-            }
-            return null;
+        public void doClient(MessageOpenCloseTerminal message, MessageContext ctx, Computer computer) {
+            computer.output = message.output;
+            computer.openTerminalGui(Minecraft.getMinecraft().thePlayer);
         }
 
-        @SideOnly(Side.CLIENT)
-        public static void onMessageClient(MessageOpenCloseTerminal message) {
-            EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-            Minecraft.getMinecraft().addScheduledTask(() -> {
-                Computer computer = Computers.getOrCreate(message.computerID, player.worldObj);
-                computer.openTerminalGui(player);
-            });
+        @Override
+        public void doServer(MessageOpenCloseTerminal message, MessageContext ctx, Computer computer) {
+            computer.user = null;
         }
     }
 }

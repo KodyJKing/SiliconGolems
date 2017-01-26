@@ -12,51 +12,39 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
 
-public class MessageOpenCloseFile implements IMessage {
+public class MessageOpenCloseFile extends MessageComputer {
 
-    int computerID;
     String file;
 
     public MessageOpenCloseFile(){}
 
     public MessageOpenCloseFile(Computer computer) {
-        computerID = computer.id;
+        super(computer);
         file = computer.activeFile;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        computerID = ByteBufUtils.readVarInt(buf, 4);
+        super.fromBytes(buf);
         file = ByteBufUtils.readUTF8String(buf);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeVarInt(buf, computerID, 4);
+        super.toBytes(buf);
         ByteBufUtils.writeUTF8String(buf, file);
     }
 
-    public static class Handler implements IMessageHandler<MessageOpenCloseFile, IMessage> {
+    public static class Handler extends MessageComputer.Handler<MessageOpenCloseFile> {
         @Override
-        public IMessage onMessage(MessageOpenCloseFile message, MessageContext ctx) {
-
-            if(ctx.side == Side.SERVER){
-                Computer computer = Computers.getOrCreate(message.computerID, ctx.getServerHandler().playerEntity.worldObj);
-                computer.activeFile = message.file;
-            } else {
-                onMessageClient(message);
-            }
-            return null;
+        public void doServer(MessageOpenCloseFile message, MessageContext ctx, Computer computer) {
+            computer.activeFile = message.file;
         }
 
-        @SideOnly(Side.CLIENT)
-        public void onMessageClient(MessageOpenCloseFile message){
-            EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-            Computer computer = Computers.getOrCreate(message.computerID, player.worldObj);
+        @Override
+        public void doClient(MessageOpenCloseFile message, MessageContext ctx, Computer computer) {
             computer.activeFile = message.file;
-            Minecraft.getMinecraft().addScheduledTask(() -> {
-                computer.openEditorGui(player);
-            });
+            computer.openEditorGui(Minecraft.getMinecraft().thePlayer);
         }
     }
 }

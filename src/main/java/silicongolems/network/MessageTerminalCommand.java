@@ -10,37 +10,33 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
 
-public class MessageTerminalCommand implements IMessage {
-
-    int computerID;
+public class MessageTerminalCommand extends MessageComputer {
+    
     String command;
 
     public MessageTerminalCommand(){}
 
     public MessageTerminalCommand(Computer computer, String command){
-        computerID = computer.id;
+        super(computer);
         this.command = command;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
-        computerID = buf.readInt();
+        super.fromBytes(buf);
         command = ByteBufUtils.readUTF8String(buf);
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        buf.writeInt(computerID);
+        super.toBytes(buf);
         ByteBufUtils.writeUTF8String(buf, command);
     }
 
-    public static class Handler implements IMessageHandler<MessageTerminalCommand, IMessage>{
+    public static class Handler extends MessageComputer.Handler<MessageTerminalCommand>{
         @Override
-        public IMessage onMessage(MessageTerminalCommand message, MessageContext ctx) {
-            EntityPlayer player = ctx.getServerHandler().playerEntity;
-            Computer computer = Computers.getOrCreate(message.computerID, player.worldObj);
+        public void doServer(MessageTerminalCommand message, MessageContext ctx, Computer computer) {
             computer.executeCommand(message.command);
-            return null;
         }
     }
 }

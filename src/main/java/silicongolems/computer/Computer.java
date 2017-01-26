@@ -2,14 +2,15 @@ package silicongolems.computer;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.IntHashMap;
 import net.minecraft.world.World;
 import silicongolems.SiliconGolems;
+import silicongolems.gui.GuiScreenTerminal;
 import silicongolems.gui.ModGuiHandler;
+import silicongolems.network.MessageOpenCloseFile;
 import silicongolems.network.MessageTerminalPrint;
 import silicongolems.network.ModPacketHandler;
+import silicongolems.scripting.Scripting;
 
-import javax.annotation.Nullable;
 import java.util.Stack;
 
 public class Computer {
@@ -29,6 +30,7 @@ public class Computer {
 
     public String activeFile;
     public Stack<String> output;
+    static int maxLines = 17;
 
     public EntityPlayerMP user;
     public World world;
@@ -38,6 +40,7 @@ public class Computer {
         id = computerID;
         Computers.add(this);
         output = new Stack<String>();
+        activeFile = "";
     }
 
     public Computer(World world){
@@ -46,12 +49,27 @@ public class Computer {
 
     public void executeCommand(String command){
         print(">" + command);
+        parseAndRun(command);
+    }
+
+    public void parseAndRun(String command){
+        String[] words = command.split(" ");
+        if(words[0].equals("run"))
+            Scripting.runInNewThread(activeFile);
+        if(words[0].equals("edit"))
+            ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this), user);
     }
 
     public void print(String line){
-        output.push(line);
+        printLocal(line);
         if(user != null)
             ModPacketHandler.INSTANCE.sendTo(new MessageTerminalPrint(this, line), user);
+    }
+
+    public void printLocal(String line){
+        output.push(line);
+        if(output.size() > maxLines)
+            output.remove(0);
     }
 
     public void openTerminalGui(EntityPlayer player){

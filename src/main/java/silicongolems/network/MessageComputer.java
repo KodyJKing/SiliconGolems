@@ -3,6 +3,7 @@ package silicongolems.network;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -31,12 +32,12 @@ public abstract class MessageComputer implements IMessage{
         buf.writeInt(computerID);
     }
 
-    public static abstract class Handler implements IMessageHandler<MessageComputer, IMessage> {
+    public static abstract class Handler<T extends MessageComputer> implements IMessageHandler<T, IMessage> {
         @Override
-        public IMessage onMessage(MessageComputer message, MessageContext ctx) {
+        public IMessage onMessage(T message, MessageContext ctx) {
             if(ctx.side == Side.SERVER){
                 Computer computer = Computers.getOrCreate(message.computerID, ctx.getServerHandler().playerEntity.worldObj);
-                doServer(computer);
+                doServer(message, ctx, computer);
             } else {
                 onMessageClient(message, ctx);
             }
@@ -45,17 +46,16 @@ public abstract class MessageComputer implements IMessage{
         }
 
         @SideOnly(Side.CLIENT)
-        public void onMessageClient(MessageComputer message, MessageContext ctx){
+        public void onMessageClient(T message, MessageContext ctx){
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
             Minecraft.getMinecraft().addScheduledTask(() -> {
                 Computer computer = Computers.getOrCreate(message.computerID, player.worldObj);
-                doClient(computer);
+                doClient(message, ctx, computer);
             });
         }
 
-        @SideOnly(Side.SERVER)
-        public abstract void doServer(Computer computer);
+        public void doServer(T message, MessageContext ctx, Computer computer){}
         @SideOnly(Side.CLIENT)
-        public abstract void doClient(Computer computer);
+        public void doClient(T message, MessageContext ctx, Computer computer){}
     }
 }

@@ -48,7 +48,7 @@ public class GuiScreenText extends GuiScreen {
     }
 
     public int textCornerY(){
-        return cornerY() + boarderWidth;
+        return cornerY() + boarderWidth + charHeight / 2;
     }
 
     public int cellX(int textX){
