@@ -89,7 +89,7 @@ public class TextEditor {
 
     public void ctrlMove(int dir){
         cursorX = ctrlSkip(dir);
-        moveCursorX(0);
+        clampX();
     }
 
     /**
@@ -147,12 +147,38 @@ public class TextEditor {
     }
 
     public void moveCursorX(int amount){
-        cursorX = Common.clamp(0, getLine().length(), cursorX + amount);
+        if(cursorX == 0 && amount < 0){
+            int oldY = cursorY;
+            cursorY--;
+            clampY();
+            if(cursorY != oldY)
+                cursorX = getLine().length();
+
+        } else if(cursorX == getLine().length() && amount > 0){
+            int oldY = cursorY;
+            cursorY++;
+            clampY();
+            if(cursorY != oldY)
+                cursorX = 0;
+        } else {
+            cursorX += amount;
+            clampX();
+        }
+
     }
 
     public void moveCursorY(int amount){
-        cursorY = Common.clamp(0, lines.size() - 1, cursorY + amount);
-        moveCursorX(0);
+        cursorY += amount;
+        clampY();
+    }
+
+    public void clampX(){
+        cursorX = Common.clamp(0, getLine().length(), cursorX);
+    }
+
+    public void clampY(){
+        cursorY = Common.clamp(0, lines.size() - 1, cursorY);
+        clampX();
     }
 
     public boolean inLine(int index){

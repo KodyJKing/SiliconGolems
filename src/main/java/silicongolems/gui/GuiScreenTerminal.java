@@ -132,7 +132,7 @@ public class GuiScreenTerminal extends GuiScreenText {
     @Override
     public void onClickCell(int x, int y, int button) {
         input.cursorX = x + scrollX;
-        input.moveCursorX(0);
+        input.clampX();
         clampScroll();
     }
 

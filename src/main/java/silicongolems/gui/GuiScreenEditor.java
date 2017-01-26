@@ -73,8 +73,7 @@ public class GuiScreenEditor extends GuiScreenText {
     public void onClickCell(int x, int y, int button) {
         editor.cursorX = scrollX + x;
         editor.cursorY = scrollY + y;
-        editor.moveCursorY(0);
-        editor.moveCursorY(0);
+        editor.clampY();
         clampScroll();
     }
 
