@@ -8,8 +8,8 @@ public class Scripting {
     static ScriptEngine engine;
 
     public static ScriptEngine getEngine(){
-        if(engine != null)
-            return engine;
+//        if(engine != null)
+//            return engine;
         NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
         engine = factory.getScriptEngine(new SiliconGolemsFilter());
         Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
@@ -38,14 +38,8 @@ public class Scripting {
     }
 
     public static Thread runInNewThread(final String script, final Bindings bindings){
-        Thread thread = new Thread(){
-            @Override
-            public void run() {
-                Scripting.run(script, bindings);
-            }
-        };
-
-        thread.run();
+        Thread thread = new Thread(() -> {Scripting.run(script, bindings);});
+        thread.start();
         return thread;
     }
 

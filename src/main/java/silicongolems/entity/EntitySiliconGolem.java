@@ -7,6 +7,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -20,7 +21,7 @@ import javax.annotation.Nullable;
 
 public class EntitySiliconGolem extends EntityLiving {
 
-    private boolean rotationLocked = true;
+    public boolean rotationLocked = true;
     public int attackTime = 0;
 
     public silicongolems.computer.Computer computer;
@@ -28,8 +29,10 @@ public class EntitySiliconGolem extends EntityLiving {
     public EntitySiliconGolem(World world) {
         super(world);
         this.setSize(1.4F * 0.5F, 1);
-        if(!world.isRemote)
+        if(!world.isRemote){
             computer = Computers.add(new Computer(world));
+            computer.entity = this;
+        }
     }
 
     public void executeCommand(String command){
@@ -56,6 +59,11 @@ public class EntitySiliconGolem extends EntityLiving {
         super.readEntityFromNBT(compound);
     }
 
+    @Override
+    public void onDeath(DamageSource cause) {
+        computer.onDestroy();
+    }
+
     // Boiler Plate Below -------------------------------------------
 
     @Override
@@ -65,6 +73,11 @@ public class EntitySiliconGolem extends EntityLiving {
     @Override
     public boolean isAIDisabled() {
         return true;
+    }
+
+    @Override
+    public void setMoveForward(float amount) {
+        super.setMoveForward(amount);
     }
 
     // Rotation Locking -------------------------------------------

@@ -4,26 +4,21 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
 import silicongolems.SiliconGolems;
-import silicongolems.gui.GuiScreenTerminal;
+import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.gui.ModGuiHandler;
 import silicongolems.network.MessageOpenCloseFile;
 import silicongolems.network.MessageTerminalPrint;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.scripting.Scripting;
+import silicongolems.scripting.js.WrapperGolem;
 
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
 import java.util.Stack;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 public class Computer {
-
-    /**
-     * TODO:
-     * Store files, run scripts and maintain terminal information in EntitySiliconGolem class.
-     * Move EntitySiliconGolem related data and functionality from EntitySiliconGolem to EntitySiliconGolem.
-     * Maintain a map of IDs to EntitySiliconGolem instances to be used to refer to Computers over the net.
-     * Pass EntitySiliconGolem refence to guis instead of EntitySiliconGolem.
-     * When a player opens a EntitySiliconGolem gui, send the EntitySiliconGolem to the player (not necessarily the whole thing).
-     * When a player closes a EntitySiliconGolem gui remove it from the local EntitySiliconGolem map.
-     */
 
     private static int nextID;
     public int id;
@@ -34,6 +29,9 @@ public class Computer {
 
     public EntityPlayerMP user;
     public World world;
+    public EntitySiliconGolem entity;
+
+    public Thread activeThread;
 
     public Computer(World world, int computerID){
         this.world = world;
@@ -55,7 +53,7 @@ public class Computer {
     public void parseAndRun(String command){
         String[] words = command.split(" ");
         if(words[0].equals("run"))
-            Scripting.runInNewThread(activeFile);
+            activeThread = Scripting.runInNewThread(activeFile, getBindings());
         if(words[0].equals("edit"))
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this), user);
     }
@@ -80,5 +78,27 @@ public class Computer {
     public void openEditorGui(EntityPlayer player){
         ModGuiHandler.activeComputer = this;
         player.openGui(SiliconGolems.instance, 1, player.worldObj, 0, 0, 0);
+    }
+
+    public Bindings getBindings(){
+        SimpleBindings bindings = new SimpleBindings();
+        bindings.put("golem", new WrapperGolem(entity));
+        bindings.put("sleep", new Function<Integer, Integer>() {
+            @Override
+            public Integer apply(Integer milis) {
+                try{
+                    Thread.sleep(milis);
+                } catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        });
+        return bindings;
+    }
+
+    public void onDestroy(){
+        activeThread.stop();
+        Computers.remove(this);
     }
 }

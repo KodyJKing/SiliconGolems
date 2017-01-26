@@ -1,11 +1,13 @@
 package silicongolems.gui;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.text.TextFormatting;
 import silicongolems.common.Common;
 import silicongolems.computer.Computer;
 import silicongolems.gui.texteditor.TextEditor;
 import silicongolems.network.MessageOpenCloseFile;
+import silicongolems.network.MessageOpenCloseTerminal;
 import silicongolems.network.ModPacketHandler;
 
 import java.io.IOException;
@@ -27,6 +29,7 @@ public class GuiScreenEditor extends GuiScreenText {
 
     @Override
     public void onGuiClosed() {
+        super.onGuiClosed();
         computer.activeFile = editor.toString();
         ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseFile(computer));
     }
@@ -72,11 +75,6 @@ public class GuiScreenEditor extends GuiScreenText {
         editor.moveCursorY(0);
         editor.moveCursorY(0);
         clampScroll();
-    }
-
-    @Override
-    public boolean onEscape() {
-        return super.onEscape();
     }
 
     @Override
