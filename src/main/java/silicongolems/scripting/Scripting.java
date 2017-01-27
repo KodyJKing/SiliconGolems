@@ -27,7 +27,8 @@ public class Scripting {
         try {
             ScriptEngine engine = getEngine();
             if(bindings != null)
-                engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+                engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(bindings);
+                //engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
             engine.eval(script);
 
 //            if(bindings != null)

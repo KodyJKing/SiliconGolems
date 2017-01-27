@@ -48,16 +48,22 @@ public class SiliconGolems
     /*
      * TODO:
      *
-     * Priority 1:
+     * Priority 1: DONE
      * Move all gui's into one tabbed GuiScreenHost or GuiScreenOS.
      * Clean up transition from editor tabs to terminal. No packets should be sent.
      *
-     * Priority 2:
+     * Priority 2: 
      * Implement a file system.
      * Implement more os commands, possible move command handling into another class and 'OOPify' commands.
      *
      * Priority 3:
      * Consider implementing a container so the server knows when the gui is open and closed.
-     * Consider text editor improvments: auto-indent, copy, mouse select, mouse drag.
+     * Consider text editor improvements: auto-indent, copy, mouse select, mouse drag.
+     *
+     * Priority 4:
+     * Consider creating a system to automatically synchronize computers and their components across the net.
+     * The system should represent component as a tree of components.
+     * The leaves should be wrapped java types so they can be watched and auto synced.
+     * Allow components to specify if they are synchronized.
      */
 }
