@@ -25,6 +25,7 @@ public class Computer {
     private static int nextID;
     public int id;
 
+    public boolean isEditing;
     public String activeFile;
     public Stack<String> output;
     static int maxLines = 17;
@@ -99,14 +100,9 @@ public class Computer {
             output.remove(0);
     }
 
-    public void openTerminalGui(EntityPlayer player){
+    public void openOSGui(EntityPlayer player){
         ModGuiHandler.activeComputer = this;
         player.openGui(SiliconGolems.instance, 0, player.worldObj, 0, 0, 0);
-    }
-
-    public void openEditorGui(EntityPlayer player){
-        ModGuiHandler.activeComputer = this;
-        player.openGui(SiliconGolems.instance, 1, player.worldObj, 0, 0, 0);
     }
 
     public Bindings getBindings(){

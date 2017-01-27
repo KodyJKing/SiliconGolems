@@ -38,7 +38,8 @@ public class MessageOpenCloseFile extends MessageComputer {
         @Override
         public void doClient(MessageOpenCloseFile message, MessageContext ctx, Computer computer) {
             computer.activeFile = message.file;
-            computer.openEditorGui(Minecraft.getMinecraft().thePlayer);
+            //computer.openEditorGui(Minecraft.getMinecraft().thePlayer);
+            computer.isEditing = true;
         }
     }
 }

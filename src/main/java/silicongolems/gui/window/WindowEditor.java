@@ -1,38 +1,33 @@
-package silicongolems.gui;
+package silicongolems.gui.window;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.text.TextFormatting;
 import silicongolems.common.Common;
 import silicongolems.computer.Computer;
+import silicongolems.gui.GuiScreenOS;
 import silicongolems.gui.texteditor.TextEditor;
 import silicongolems.network.MessageOpenCloseFile;
-import silicongolems.network.MessageOpenCloseTerminal;
 import silicongolems.network.ModPacketHandler;
 
-import java.io.IOException;
-
-public class GuiScreenEditor extends GuiScreenText {
+public class WindowEditor extends Window {
 
     public int scrollX, scrollY;
     public TextEditor editor;
 
-    Computer computer;
-
-    public GuiScreenEditor(Computer computer) {
-        editor = new TextEditor();
+    public WindowEditor(Computer computer, GuiScreenOS gui){
+        super(computer, gui);
         scrollX = 0;
         scrollY = 0;
-        this.computer = computer;
+        editor = new TextEditor();
         editor.type(computer.activeFile);
         clampScroll();
     }
 
     @Override
-    public void onGuiClosed() {
-        super.onGuiClosed();
+    public void onCloseWindow() {
         computer.activeFile = editor.toString();
         ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseFile(computer));
+        computer.isEditing = false;
     }
 
     @Override
@@ -41,10 +36,10 @@ public class GuiScreenEditor extends GuiScreenText {
 
         int x, y;
         y = scrollY;
-        while(y < editor.lines.size() && y - scrollY < textHeight){
+        while(y < editor.lines.size() && y - scrollY < getTextHeight()){
             StringBuilder line = editor.getLine(y);
             x = scrollX;
-            while(x < line.length() && x - scrollX < textWidth){
+            while(x < line.length() && x - scrollX < getTextWidth()){
                 char c = line.charAt(x);
                 if(ChatAllowedCharacters.isAllowedCharacter(c))
                     drawChar(x - scrollX, y - scrollY, c, TextFormatting.GREEN);
@@ -57,16 +52,10 @@ public class GuiScreenEditor extends GuiScreenText {
             drawChar(editor.cursorX - scrollX, editor.cursorY - scrollY, '_', TextFormatting.DARK_GREEN);
     }
 
-    @Override
-    protected void keyTyped(char c, int keyCode) throws IOException {
-        super.keyTyped(c, keyCode);
-        clampScroll();
-    }
-
     //Keep the cursor in view.
     public void clampScroll(){
-        scrollX = Common.clamp(editor.cursorX - textWidth + 1, editor.cursorX, scrollX);
-        scrollY = Common.clamp(editor.cursorY - textHeight + 1, editor.cursorY, scrollY);
+        scrollX = Common.clamp(editor.cursorX - getTextWidth() + 1, editor.cursorX, scrollX);
+        scrollY = Common.clamp(editor.cursorY - getTextHeight() + 1, editor.cursorY, scrollY);
     }
 
     @Override
@@ -75,13 +64,6 @@ public class GuiScreenEditor extends GuiScreenText {
         editor.cursorY = scrollY + y;
         editor.clampY();
         clampScroll();
-    }
-
-    @Override
-    public boolean onEscape() {
-        Minecraft.getMinecraft().displayGuiScreen(null);
-        computer.openTerminalGui(Minecraft.getMinecraft().thePlayer);
-        return true;
     }
 
     @Override

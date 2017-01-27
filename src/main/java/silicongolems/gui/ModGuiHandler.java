@@ -5,7 +5,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import silicongolems.computer.Computer;
-import silicongolems.entity.EntitySiliconGolem;
+import silicongolems.gui.window.WindowEditor;
 
 public class ModGuiHandler implements IGuiHandler {
 
@@ -26,10 +26,7 @@ public class ModGuiHandler implements IGuiHandler {
             return null;
 
         if(ID == 0)
-            return new GuiScreenTerminal(activeComputer);
-
-        if(ID == 1)
-            return new GuiScreenEditor(activeComputer);
+            return new GuiScreenOS(activeComputer);
 
         return null;
     }

@@ -1,17 +1,16 @@
-package silicongolems.gui;
+package silicongolems.gui.window;
 
 import net.minecraft.util.text.TextFormatting;
 import silicongolems.common.Common;
 import silicongolems.computer.Computer;
-import silicongolems.computer.Computers;
+import silicongolems.gui.GuiScreenOS;
 import silicongolems.gui.texteditor.TextEditor;
-import silicongolems.network.MessageOpenCloseTerminal;
 import silicongolems.network.MessageCommand;
 import silicongolems.network.ModPacketHandler;
 
 import java.util.Stack;
 
-public class GuiScreenTerminal extends GuiScreenText {
+public class WindowTerminal extends Window {
 
     int scrollX;
 
@@ -20,39 +19,28 @@ public class GuiScreenTerminal extends GuiScreenText {
     Stack<String> output;
     TextEditor input;
 
-    Computer computer;
-
-    public GuiScreenTerminal(Computer computer){
+    public WindowTerminal(Computer computer, GuiScreenOS gui){
+        super(computer, gui);
         cmdHistory = new Stack<String>();
         output = computer.output;
         cmdIndex = 0;
         input = new TextEditor();
 
-        this.computer = computer;
-
         scrollX = 0;
     }
 
-//    @Override
-//    public void onGuiClosed() {
-//        super.onGuiClosed();
-//        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseTerminal(computer));
-//        Computers.remove(computer);
-//    }
-
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
         drawOutput();
         drawInput();
     }
 
     public void drawOutput(){
         int y = 0;
-        while(y < output.size() && y < textHeight - 1){
+        while(y < output.size() && y < getTextHeight() - 1){
             String line = output.get(y);
             int x = 0;
-            while(x < line.length() && x < textHeight){
+            while(x < line.length() && x < getTextHeight()){
                 drawChar(x, y, line.charAt(x), TextFormatting.DARK_GREEN);
                 x++;
             }
@@ -64,21 +52,14 @@ public class GuiScreenTerminal extends GuiScreenText {
         int x = scrollX;
 
         StringBuilder line = input.getLine(0);
-        drawChar(x, textHeight - 1, '>', TextFormatting.GREEN);
-        while(x < line.length() && x + 1 - scrollX < textWidth){
-            drawChar(x + 1, textHeight - 1, line.charAt(x), TextFormatting.GREEN);
+        drawChar(x, getTextHeight() - 1, '>', TextFormatting.GREEN);
+        while(x < line.length() && x + 1 - scrollX < getTextWidth()){
+            drawChar(x + 1, getTextHeight() - 1, line.charAt(x), TextFormatting.GREEN);
             x++;
         }
 
         if(Common.blink(1000, 500))
-            drawChar(1 + input.cursorX - scrollX, textHeight - 1, '_', TextFormatting.DARK_GREEN);
-    }
-
-    @Override
-    public boolean onEscape() {
-        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseTerminal(computer));
-        Computers.remove(computer);
-        return false;
+            drawChar(1 + input.cursorX - scrollX, getTextHeight() - 1, '_', TextFormatting.DARK_GREEN);
     }
 
     @Override
@@ -138,6 +119,6 @@ public class GuiScreenTerminal extends GuiScreenText {
 
     //Keep the cursor in view.
     public void clampScroll(){
-        scrollX = Common.clamp(input.cursorX + 1 - textWidth, input.cursorX, scrollX);
+        scrollX = Common.clamp(input.cursorX + 1 - getTextWidth(), input.cursorX, scrollX);
     }
 }

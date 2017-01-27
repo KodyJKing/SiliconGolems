@@ -50,7 +50,7 @@ public class SiliconGolems
      *
      * Priority 1:
      * Move all gui's into one tabbed GuiScreenHost or GuiScreenOS.
-     * Clean up transition from editor screen to terminal. No packets should be sent.
+     * Clean up transition from editor tabs to terminal. No packets should be sent.
      *
      * Priority 2:
      * Implement a file system.

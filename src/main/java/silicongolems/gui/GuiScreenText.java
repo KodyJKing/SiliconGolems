@@ -1,6 +1,5 @@
 package silicongolems.gui;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ChatAllowedCharacters;
@@ -9,7 +8,6 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.opengl.GL11;
 import silicongolems.SiliconGolems;
 
 import java.io.IOException;
@@ -17,13 +15,14 @@ import java.io.IOException;
 @SideOnly(Side.CLIENT)
 public class GuiScreenText extends GuiScreen {
     private static final ResourceLocation textGuiTextures = new ResourceLocation(SiliconGolems.modId, "textures/gui/text_editor.png");
-    public int editorWidth = 248;
-    public int editorHeight = 166;
-    public int boarderWidth = 8;
-    public int textWidth = 38;
-    public int textHeight = 18;
-    public int charWidth = 6;
-    public int charHeight = 8;
+
+    private int editorWidth = 248;
+    private int editorHeight = 166;
+    private int boarderWidth = 8;
+    private int textWidth = 38;
+    private int textHeight = 18;
+    private int charWidth = 6;
+    private int charHeight = 8;
 
     @Override
     public void initGui() {
@@ -36,27 +35,27 @@ public class GuiScreenText extends GuiScreen {
     }
 
     public int cornerX(){
-        return (this.width - this.editorWidth) / 2;
+        return (this.width - this.getEditorWidth()) / 2;
     }
 
     public int cornerY(){
-        return (this.height - this.editorHeight) / 2;
+        return (this.height - this.getEditorHeight()) / 2;
     }
 
     public int textCornerX(){
-        return cornerX() + boarderWidth;
+        return cornerX() + getBoarderWidth();
     }
 
     public int textCornerY(){
-        return cornerY() + boarderWidth + charHeight / 2;
+        return cornerY() + getBoarderWidth() + getCharHeight() / 2;
     }
 
     public int cellX(int textX){
-        return textCornerX() + textX * charWidth;
+        return textCornerX() + textX * getCharWidth();
     }
 
     public int cellY(int textY){
-        return textCornerY() + textY * charHeight;
+        return textCornerY() + textY * getCharHeight();
     }
 
     public void drawChar(int x, int y, char c, TextFormatting color){
@@ -91,7 +90,7 @@ public class GuiScreenText extends GuiScreen {
         mc.getTextureManager().bindTexture(textGuiTextures);
         int x = cornerX();
         int y = cornerY();
-        this.drawTexturedModalRect(x, y, 0, 0, this.editorWidth, this.editorHeight);
+        this.drawTexturedModalRect(x, y, 0, 0, this.getEditorWidth(), this.getEditorHeight());
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
@@ -102,7 +101,7 @@ public class GuiScreenText extends GuiScreen {
 
 
     @Override
-    protected void keyTyped(char c, int keyCode) throws IOException {
+    public void keyTyped(char c, int keyCode) throws IOException {
         boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL);
 
         if(keyCode == 1 && !onEscape())
@@ -126,15 +125,15 @@ public class GuiScreenText extends GuiScreen {
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
 
         if(mouseButton != 0)
             return;
 
-        int textX = (mouseX - textCornerX()) / charWidth;
-        int textY = (mouseY - textCornerY()) / charHeight;
-        if(textX >= 0 && textX <= textWidth && textY >= 0 && textY <= textHeight)
+        int textX = (mouseX - textCornerX()) / getCharWidth();
+        int textY = (mouseY - textCornerY()) / getCharHeight();
+        if(textX >= 0 && textX <= getTextWidth() && textY >= 0 && textY <= getTextHeight())
             onClickCell(textX, textY, mouseButton);
     }
 
@@ -146,4 +145,26 @@ public class GuiScreenText extends GuiScreen {
     public void onBackspace(boolean ctrl){}
     public void onType(String string){}
     public void onClickCell(int x, int y, int button){}
+
+    public int getEditorWidth() {
+        return editorWidth;
+    }
+    public int getEditorHeight() {
+        return editorHeight;
+    }
+    public int getBoarderWidth() {
+        return boarderWidth;
+    }
+    public int getTextWidth() {
+        return textWidth;
+    }
+    public int getTextHeight() {
+        return textHeight;
+    }
+    public int getCharWidth() {
+        return charWidth;
+    }
+    public int getCharHeight() {
+        return charHeight;
+    }
 }
