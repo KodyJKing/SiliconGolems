@@ -84,4 +84,5 @@ public class Window {
     public void onOpenWindow() {}
     public void onCloseWindow() {}
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {}
+    public void onCtrlT(){}
 }

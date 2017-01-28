@@ -1,5 +1,6 @@
 package silicongolems.gui.window;
 
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.text.TextFormatting;
 import silicongolems.common.Common;

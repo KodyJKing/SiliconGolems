@@ -14,7 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
-import silicongolems.network.MessageOpenCloseOS;
+import silicongolems.network.MessageOpenComputer;
 import silicongolems.network.ModPacketHandler;
 
 import javax.annotation.Nullable;
@@ -43,7 +43,7 @@ public class EntitySiliconGolem extends EntityLiving {
     protected boolean processInteract(EntityPlayer player, EnumHand hand, @Nullable ItemStack stack) {
         if(!worldObj.isRemote && !player.isSneaking() && computer.canOpen(player)){
             computer.user = (EntityPlayerMP) player;
-            ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseOS(computer), (EntityPlayerMP) player);
+            ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
         }
 
         return true;

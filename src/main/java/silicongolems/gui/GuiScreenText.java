@@ -19,10 +19,14 @@ public class GuiScreenText extends GuiScreen {
     private int editorWidth = 248;
     private int editorHeight = 166;
     private int boarderWidth = 8;
+
     private int textWidth = 38;
     private int textHeight = 18;
+
     private int charWidth = 6;
     private int charHeight = 8;
+
+    public int textScale = 2;
 
     @Override
     public void initGui() {
@@ -50,12 +54,20 @@ public class GuiScreenText extends GuiScreen {
         return cornerY() + getBoarderWidth() + getCharHeight() / 2;
     }
 
+//    public int cellX(int textX){
+//        return textCornerX() + textX * getCharWidth();
+//    }
+//
+//    public int cellY(int textY){
+//        return textCornerY() + textY * getCharHeight();
+//    }
+
     public int cellX(int textX){
-        return textCornerX() + textX * getCharWidth();
+        return textX * charWidth;
     }
 
     public int cellY(int textY){
-        return textCornerY() + textY * getCharHeight();
+        return textY * charHeight;
     }
 
     public void drawChar(int x, int y, char c, TextFormatting color){
@@ -63,12 +75,16 @@ public class GuiScreenText extends GuiScreen {
     }
 
     public void drawChar(int x, int y, char c, TextFormatting color, boolean fixThin){
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(textCornerX(), textCornerY(), 0);
+        GlStateManager.scale(1.0 / textScale, 1.0 / textScale, 1.0 / textScale);
         int xAdjust = fixThin && isThin(c) ? 2 : 0;
         this.fontRendererObj.drawString(
                 color + Character.toString(c),
                 cellX(x) + xAdjust,
                 cellY(y),
                 8);
+        GlStateManager.popMatrix();
     }
 
     public boolean isThin(char c) {
@@ -99,11 +115,12 @@ public class GuiScreenText extends GuiScreen {
         return false;
     }
 
-
     @Override
     public void keyTyped(char c, int keyCode) throws IOException {
         boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL);
 
+        if(isKeyComboCtrlT(keyCode))
+            onCtrlT();
         if(keyCode == 1 && !onEscape())
             super.keyTyped(c, keyCode);
         else if(GuiScreen.isKeyComboCtrlV(keyCode))
@@ -122,6 +139,10 @@ public class GuiScreenText extends GuiScreen {
             onEnter();
         else if(ChatAllowedCharacters.isAllowedCharacter(c))
             onType(Character.toString(c));
+    }
+
+    public boolean isKeyComboCtrlT(int keyCode){
+        return keyCode == 20 && isCtrlKeyDown() && !isShiftKeyDown() && !isAltKeyDown();
     }
 
     @Override
@@ -145,6 +166,7 @@ public class GuiScreenText extends GuiScreen {
     public void onBackspace(boolean ctrl){}
     public void onType(String string){}
     public void onClickCell(int x, int y, int button){}
+    public void onCtrlT(){}
 
     public int getEditorWidth() {
         return editorWidth;
@@ -156,15 +178,15 @@ public class GuiScreenText extends GuiScreen {
         return boarderWidth;
     }
     public int getTextWidth() {
-        return textWidth;
+        return textWidth * textScale;
     }
     public int getTextHeight() {
-        return textHeight;
+        return textHeight * textScale;
     }
     public int getCharWidth() {
-        return charWidth;
+        return charWidth / textScale;
     }
     public int getCharHeight() {
-        return charHeight;
+        return charHeight / textScale;
     }
 }

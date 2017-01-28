@@ -1,10 +1,12 @@
 package silicongolems.gui.window;
 
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.text.TextFormatting;
 import silicongolems.common.Common;
 import silicongolems.computer.Computer;
 import silicongolems.gui.GuiScreenOS;
 import silicongolems.gui.texteditor.TextEditor;
+import silicongolems.network.MessageByte;
 import silicongolems.network.MessageCommand;
 import silicongolems.network.ModPacketHandler;
 
@@ -126,4 +128,10 @@ public class WindowTerminal extends Window {
         //Compare to WindowEditor.clampScroll().
         scrollX = Common.clamp(input.cursorX + 1 + 1 - getTextWidth(), input.cursorX, scrollX);
     }
+
+    @Override
+    public void onCtrlT() {
+        ModPacketHandler.INSTANCE.sendToServer(new MessageByte(computer, MessageByte.TERMINATE));
+    }
+
 }

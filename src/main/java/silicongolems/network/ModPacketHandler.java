@@ -15,8 +15,8 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.CLIENT);
         INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.SERVER);
 
-        INSTANCE.registerMessage(MessageOpenCloseOS.Handler.class, MessageOpenCloseOS.class, id++, Side.CLIENT);
-        INSTANCE.registerMessage(MessageOpenCloseOS.Handler.class, MessageOpenCloseOS.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageOpenComputer.Handler.class, MessageOpenComputer.class, id++, Side.CLIENT);
+        INSTANCE.registerMessage(MessageOpenComputer.Handler.class, MessageOpenComputer.class, id++, Side.SERVER);
 
         INSTANCE.registerMessage(MessageCommand.Handler.class, MessageCommand.class, id++, Side.SERVER);
 

@@ -1,8 +1,8 @@
 package silicongolems.common;
 
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.nbt.NBTTagCompound;
+
+import java.util.Map;
 
 public class Common {
 

@@ -9,6 +9,7 @@ import net.minecraft.world.World;
 import silicongolems.SiliconGolems;
 import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.gui.ModGuiHandler;
+import silicongolems.javascript.JSThread;
 import silicongolems.network.MessageByte;
 import silicongolems.network.MessageOpenCloseFile;
 import silicongolems.network.MessagePrint;
@@ -19,6 +20,7 @@ import silicongolems.javascript.js.WrapperGolem;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 import java.util.function.Consumer;
 
@@ -36,7 +38,8 @@ public class Computer {
     public World world;
     public EntitySiliconGolem entity;
 
-    public Thread activeThread;
+    public JSThread activeThread;
+    public String runningProgram;
 
     public Computer(World world, int computerID){
         this.world = world;
@@ -50,18 +53,27 @@ public class Computer {
         this(world, nextID++);
     }
 
-    public NBTTagCompound writeNBT(NBTTagCompound tag){
-        NBTTagList list = new NBTTagList();
+    public NBTTagCompound writeNBT(NBTTagCompound nbt){
+        NBTTagCompound filesNbt = new NBTTagCompound();
+        for(Map.Entry<String, String> entry: files.entrySet())
+            filesNbt.setString(entry.getKey(), entry.getValue());
+        nbt.setTag("files", filesNbt);
+
+        NBTTagList terminalNbt = new NBTTagList();
         for(String line : terminalOutput)
-            list.appendTag(new NBTTagString(line));
-        tag.setTag("terminalOutput", list);
-        return tag;
+            terminalNbt.appendTag(new NBTTagString(line));
+        nbt.setTag("terminalOutput", terminalNbt);
+        return nbt;
     }
 
-    public void readNBT(NBTTagCompound tag){
-        NBTTagList list = tag.getTagList("terminalOutput", 8);
-        for(int i = 0; i < list.tagCount(); i++)
-            terminalOutput.push(list.getStringTagAt(i));
+    public void readNBT(NBTTagCompound nbt){
+        NBTTagCompound filesNbt = nbt.getCompoundTag("files");
+        for(String key: filesNbt.getKeySet())
+            files.put(key, filesNbt.getString(key));
+
+        NBTTagList terminalNbt = nbt.getTagList("terminalOutput", 8);
+        for(int i = 0; i < terminalNbt.tagCount(); i++)
+            terminalOutput.push(terminalNbt.getStringTagAt(i));
     }
 
     public void onDestroy(){
@@ -70,7 +82,10 @@ public class Computer {
     }
 
     public void killProcess(){
-        activeThread.stop();
+        if(activeThread != null){
+            activeThread.stop();
+            print("Terminated program.");
+        }
     }
 
     public void executeCommand(String command){
@@ -94,6 +109,7 @@ public class Computer {
                 if(path == null)
                     return;
                 activeThread = Scripting.runInNewThread(readFile(path), getBindings());
+                runningProgram = path;
                 return;
             case "edit":
                 path = getArgument("path", 1, words);
@@ -146,7 +162,7 @@ public class Computer {
             terminalOutput.remove(0);
     }
 
-    public void openOSGui(EntityPlayer player){
+    public void openComputerGui(EntityPlayer player){
         ModGuiHandler.activeComputer = this;
         player.openGui(SiliconGolems.instance, 0, player.worldObj, 0, 0, 0);
     }
@@ -171,8 +187,18 @@ public class Computer {
 
     public void updateComputer(){
         if(user != null){
-            if(!inRange(user))
+            if(!inRange(user)){
+                ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLOSE_COMPUTER), user);
                 user = null;
+            }
+
+            if(activeThread != null && !activeThread.isAlive()){
+                if(activeThread.errorMessage == null)
+                    print("Program finished.");
+                else
+                    print(activeThread.errorMessage.replaceAll("<eval>", runningProgram));
+                activeThread = null;
+            }
         }
     }
 

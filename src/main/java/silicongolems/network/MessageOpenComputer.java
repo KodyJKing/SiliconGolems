@@ -10,13 +10,13 @@ import silicongolems.computer.Computer;
 
 import java.util.Stack;
 
-public class MessageOpenCloseOS extends MessageComputer {
+public class MessageOpenComputer extends MessageComputer {
 
     Stack<String> output;
 
-    public MessageOpenCloseOS(){}
+    public MessageOpenComputer(){}
 
-    public MessageOpenCloseOS(Computer computer){
+    public MessageOpenComputer(Computer computer){
         super(computer);
         output = computer.terminalOutput;
     }
@@ -40,16 +40,16 @@ public class MessageOpenCloseOS extends MessageComputer {
             ByteBufUtils.writeUTF8String(buf, line);
     }
 
-    public static class Handler extends MessageComputer.Handler<MessageOpenCloseOS> {
+    public static class Handler extends MessageComputer.Handler<MessageOpenComputer> {
         @Override
         @SideOnly(Side.CLIENT)
-        public void doClient(MessageOpenCloseOS message, MessageContext ctx, Computer computer) {
+        public void doClient(MessageOpenComputer message, MessageContext ctx, Computer computer) {
             computer.terminalOutput = message.output;
-            computer.openOSGui(Minecraft.getMinecraft().thePlayer);
+            computer.openComputerGui(Minecraft.getMinecraft().thePlayer);
         }
 
         @Override
-        public void doServer(MessageOpenCloseOS message, MessageContext ctx, Computer computer) {
+        public void doServer(MessageOpenComputer message, MessageContext ctx, Computer computer) {
             computer.user = null;
         }
     }

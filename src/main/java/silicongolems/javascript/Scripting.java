@@ -23,36 +23,33 @@ public class Scripting {
         return engine;
     }
 
-    public static void run(String script, Bindings bindings){
+    public static String run(String script, Bindings bindings){
         try {
             ScriptEngine engine = getEngine();
             if(bindings != null)
                 engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(bindings);
-                //engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+
             engine.eval(script);
 
-//            if(bindings != null)
-//                getEngine().eval(script);
-//            else
-//                getEngine().eval(script, bindings);
-
         } catch (ScriptException e){
-            System.out.println("There was an issue running the script:\n" + script);
-            System.out.println(e.getMessage());
+            //System.out.println("There was an issue running the script:\n" + script);
+            //System.out.println(e.getMessage());
+            return e.getMessage();
         }
+        return null;
     }
 
-    public static void run(String script){
-        run(script, null);
+    public static String run(String script){
+        return run(script, null);
     }
 
-    public static Thread runInNewThread(final String script, final Bindings bindings){
-        Thread thread = new Thread(() -> {Scripting.run(script, bindings);});
+    public static JSThread runInNewThread(final String script, final Bindings bindings){
+        JSThread thread = new JSThread(script, bindings);
         thread.start();
         return thread;
     }
 
-    public static Thread runInNewThread(String script){
+    public static JSThread runInNewThread(String script){
         return runInNewThread(script, null);
     }
 }

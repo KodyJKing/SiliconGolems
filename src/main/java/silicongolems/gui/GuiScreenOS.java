@@ -2,11 +2,10 @@ package silicongolems.gui;
 
 import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
-import silicongolems.gui.window.WindowEditor;
 import silicongolems.gui.window.WindowTerminal;
-import silicongolems.gui.GuiScreenText;
 import silicongolems.gui.window.Window;
-import silicongolems.network.MessageOpenCloseOS;
+import silicongolems.network.MessageByte;
+import silicongolems.network.MessageOpenComputer;
 import silicongolems.network.ModPacketHandler;
 
 public class GuiScreenOS extends GuiScreenText {
@@ -68,7 +67,12 @@ public class GuiScreenOS extends GuiScreenText {
 
     @Override
     public void onGuiClosed() {
-        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseOS(computer));
+        ModPacketHandler.INSTANCE.sendToServer(new MessageByte(computer, MessageByte.CLOSE_COMPUTER));
         Computers.remove(computer);
+    }
+
+    @Override
+    public void onCtrlT() {
+        getActiveScreen().onCtrlT();
     }
 }
