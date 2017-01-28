@@ -1,4 +1,4 @@
-package silicongolems.scripting;
+package silicongolems.javascript;
 
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 

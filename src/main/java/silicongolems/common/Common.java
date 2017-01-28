@@ -1,5 +1,9 @@
 package silicongolems.common;
 
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 public class Common {
 
     public static boolean blink(int period, int duration){
@@ -13,5 +17,4 @@ public class Common {
             return high;
         return x;
     }
-
 }

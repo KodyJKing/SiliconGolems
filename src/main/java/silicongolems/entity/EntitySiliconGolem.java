@@ -41,7 +41,7 @@ public class EntitySiliconGolem extends EntityLiving {
 
     @Override
     protected boolean processInteract(EntityPlayer player, EnumHand hand, @Nullable ItemStack stack) {
-        if(!worldObj.isRemote && !player.isSneaking()){
+        if(!worldObj.isRemote && !player.isSneaking() && computer.canOpen(player)){
             computer.user = (EntityPlayerMP) player;
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseOS(computer), (EntityPlayerMP) player);
         }
@@ -71,7 +71,14 @@ public class EntitySiliconGolem extends EntityLiving {
     protected void despawnEntity() {
         super.despawnEntity();
         computer.onDestroy();
-}
+    }
+
+    @Override
+    public void onEntityUpdate() {
+        super.onEntityUpdate();
+        if(!worldObj.isRemote)
+            computer.updateComputer();
+    }
 
     // Boiler Plate Below -------------------------------------------
 

@@ -20,21 +20,7 @@ public class GuiScreenOS extends GuiScreenText {
     }
 
     public Window getActiveScreen() {
-        if(getEditor() != null)
-            return getEditor();
-        else
-            return terminal;
-    }
-
-    private Window getEditor(){
-        if(computer.isEditing) {
-            if (editor == null)
-                editor = new WindowEditor(computer, this);
-            return editor;
-        } else {
-            editor = null;
-        }
-        return editor;
+        return editor != null ? editor : terminal;
     }
 
     @Override
@@ -45,7 +31,7 @@ public class GuiScreenOS extends GuiScreenText {
 
     @Override
     public boolean onEscape() {
-        boolean wasEditing = computer.isEditing;
+        boolean wasEditing = editor != null;
         getActiveScreen().onCloseWindow();
         return wasEditing;
     }

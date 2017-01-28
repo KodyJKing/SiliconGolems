@@ -12,8 +12,8 @@ public class ModPacketHandler {
     public static void registerPackets(){
         int id = 0;
 
-        INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.CLIENT);
+        INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.SERVER);
 
         INSTANCE.registerMessage(MessageOpenCloseOS.Handler.class, MessageOpenCloseOS.class, id++, Side.CLIENT);
         INSTANCE.registerMessage(MessageOpenCloseOS.Handler.class, MessageOpenCloseOS.class, id++, Side.SERVER);
@@ -23,6 +23,7 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(MessagePrint.Handler.class, MessagePrint.class, id++, Side.CLIENT);
 
         INSTANCE.registerMessage(MessageByte.Handler.class, MessageByte.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageByte.Handler.class, MessageByte.class, id++, Side.CLIENT);
     }
 
 }

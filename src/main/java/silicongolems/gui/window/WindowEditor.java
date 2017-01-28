@@ -13,21 +13,22 @@ public class WindowEditor extends Window {
 
     public int scrollX, scrollY;
     public TextEditor editor;
+    public String path;
 
-    public WindowEditor(Computer computer, GuiScreenOS gui){
+    public WindowEditor(Computer computer, GuiScreenOS gui, String path, String text){
         super(computer, gui);
         scrollX = 0;
         scrollY = 0;
         editor = new TextEditor();
-        editor.type(computer.activeFile);
+        editor.type(text);
+        this.path = path;
         clampScroll();
     }
 
     @Override
     public void onCloseWindow() {
-        computer.activeFile = editor.toString();
-        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseFile(computer));
-        computer.isEditing = false;
+        ModPacketHandler.INSTANCE.sendToServer(new MessageOpenCloseFile(computer, path, editor.toString()));
+        gui.editor = null;
     }
 
     @Override
@@ -69,11 +70,13 @@ public class WindowEditor extends Window {
     @Override
     public void onEnter() {
         editor.newline();
+        clampScroll();
     }
 
     @Override
     public void onVertArrow(int dir) {
         editor.moveCursorY(dir);
+        clampScroll();
     }
 
     @Override
@@ -82,6 +85,7 @@ public class WindowEditor extends Window {
             editor.ctrlMove(dir);
         else
             editor.moveCursorX(dir);
+        clampScroll();
     }
 
 
@@ -91,10 +95,12 @@ public class WindowEditor extends Window {
             editor.ctrlBackspace();
         else
             editor.backspace();
+        clampScroll();
     }
 
     @Override
     public void onType(String string) {
         editor.type(string);
+        clampScroll();
     }
 }

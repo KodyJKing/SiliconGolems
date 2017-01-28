@@ -52,9 +52,9 @@ public class SiliconGolems
      * Move all gui's into one tabbed GuiScreenHost or GuiScreenOS.
      * Clean up transition from editor tabs to terminal. No packets should be sent.
      *
-     * Priority 2: 
+     * Priority 2: DONE
      * Implement a file system.
-     * Implement more os commands, possible move command handling into another class and 'OOPify' commands.
+     * Implement more os commands, possibly move command handling into another class and 'OOPify' commands.
      *
      * Priority 3:
      * Consider implementing a container so the server knows when the gui is open and closed.

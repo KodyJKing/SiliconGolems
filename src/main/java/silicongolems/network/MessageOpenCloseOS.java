@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import silicongolems.computer.Computer;
 
 import java.util.Stack;
@@ -16,7 +18,7 @@ public class MessageOpenCloseOS extends MessageComputer {
 
     public MessageOpenCloseOS(Computer computer){
         super(computer);
-        output = computer.output;
+        output = computer.terminalOutput;
     }
 
     @Override
@@ -40,8 +42,9 @@ public class MessageOpenCloseOS extends MessageComputer {
 
     public static class Handler extends MessageComputer.Handler<MessageOpenCloseOS> {
         @Override
+        @SideOnly(Side.CLIENT)
         public void doClient(MessageOpenCloseOS message, MessageContext ctx, Computer computer) {
-            computer.output = message.output;
+            computer.terminalOutput = message.output;
             computer.openOSGui(Minecraft.getMinecraft().thePlayer);
         }
 

@@ -7,6 +7,7 @@ import silicongolems.computer.Computer;
 public class MessageByte extends MessageComputer{
 
     public static final byte TERMINATE = 0;
+    public static final byte CLEAR_SCREEN = 1;
 
     byte msg;
 
@@ -35,6 +36,14 @@ public class MessageByte extends MessageComputer{
             switch (message.msg){
                 case TERMINATE:
                     computer.killProcess();
+            }
+        }
+
+        @Override
+        public void doClient(MessageByte message, MessageContext ctx, Computer computer) {
+            switch (message.msg){
+                case CLEAR_SCREEN:
+                    computer.terminalOutput.clear();
             }
         }
     }

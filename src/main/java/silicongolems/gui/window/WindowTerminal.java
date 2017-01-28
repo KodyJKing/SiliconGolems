@@ -22,10 +22,9 @@ public class WindowTerminal extends Window {
     public WindowTerminal(Computer computer, GuiScreenOS gui){
         super(computer, gui);
         cmdHistory = new Stack<String>();
-        output = computer.output;
+        output = computer.terminalOutput;
         cmdIndex = 0;
         input = new TextEditor();
-
         scrollX = 0;
     }
 
@@ -40,7 +39,7 @@ public class WindowTerminal extends Window {
         while(y < output.size() && y < getTextHeight() - 1){
             String line = output.get(y);
             int x = 0;
-            while(x < line.length() && x < getTextHeight()){
+            while(x < line.length() && x < getTextWidth()){
                 drawChar(x, y, line.charAt(x), TextFormatting.DARK_GREEN);
                 x++;
             }
@@ -49,17 +48,20 @@ public class WindowTerminal extends Window {
     }
 
     public void drawInput(){
-        int x = scrollX;
+        if(scrollX == 0)
+            drawChar(0, getTextHeight() - 1, '>', TextFormatting.GREEN);
+
+        int x = scrollX == 0 ? 0 : scrollX - 1;
 
         StringBuilder line = input.getLine(0);
-        drawChar(x, getTextHeight() - 1, '>', TextFormatting.GREEN);
         while(x < line.length() && x + 1 - scrollX < getTextWidth()){
-            drawChar(x + 1, getTextHeight() - 1, line.charAt(x), TextFormatting.GREEN);
+            drawChar(x + 1 - scrollX, getTextHeight() - 1, line.charAt(x), TextFormatting.GREEN);
             x++;
         }
 
-        if(Common.blink(1000, 500))
-            drawChar(1 + input.cursorX - scrollX, getTextHeight() - 1, '_', TextFormatting.DARK_GREEN);
+        int cursorX = 1 + input.cursorX - scrollX;
+        if(cursorX < getTextWidth() && Common.blink(1000, 500))
+            drawChar(cursorX, getTextHeight() - 1, '_', TextFormatting.DARK_GREEN);
     }
 
     @Override
@@ -70,6 +72,7 @@ public class WindowTerminal extends Window {
         cmdIndex = cmdHistory.size();
 
         ModPacketHandler.INSTANCE.sendToServer(new MessageCommand(computer, cmd));
+        clampScroll();
     }
 
     @Override
@@ -119,6 +122,8 @@ public class WindowTerminal extends Window {
 
     //Keep the cursor in view.
     public void clampScroll(){
-        scrollX = Common.clamp(input.cursorX + 1 - getTextWidth(), input.cursorX, scrollX);
+        //This statement is odd on purpose, there is an extra +1 because of the '>' character in the input field.
+        //Compare to WindowEditor.clampScroll().
+        scrollX = Common.clamp(input.cursorX + 1 + 1 - getTextWidth(), input.cursorX, scrollX);
     }
 }

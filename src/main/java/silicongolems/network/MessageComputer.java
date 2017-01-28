@@ -2,6 +2,7 @@ package silicongolems.network;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -32,11 +33,21 @@ public abstract class MessageComputer implements IMessage{
         buf.writeInt(computerID);
     }
 
+    public boolean validateMessage(Computer computer, EntityPlayer player){
+        return computer.canUse(player);
+    }
+
     public static abstract class Handler<T extends MessageComputer> implements IMessageHandler<T, IMessage> {
         @Override
         public IMessage onMessage(T message, MessageContext ctx) {
             if(ctx.side == Side.SERVER){
-                Computer computer = Computers.getOrCreate(message.computerID, ctx.getServerHandler().playerEntity.worldObj);
+                EntityPlayer player = ctx.getServerHandler().playerEntity;
+                Computer computer = Computers.getOrCreate(message.computerID, player.worldObj);
+                if(!message.validateMessage(computer, player))
+                {
+                    System.out.println("Invalid message from player " + player.getName() + ".");
+                    return null;
+                }
                 doServer(message, ctx, computer);
             } else {
                 onMessageClient(message, ctx);

@@ -9,14 +9,16 @@ import net.minecraft.world.World;
 import silicongolems.SiliconGolems;
 import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.gui.ModGuiHandler;
+import silicongolems.network.MessageByte;
 import silicongolems.network.MessageOpenCloseFile;
 import silicongolems.network.MessagePrint;
 import silicongolems.network.ModPacketHandler;
-import silicongolems.scripting.Scripting;
-import silicongolems.scripting.js.WrapperGolem;
+import silicongolems.javascript.Scripting;
+import silicongolems.javascript.js.WrapperGolem;
 
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import java.util.HashMap;
 import java.util.Stack;
 import java.util.function.Consumer;
 
@@ -25,10 +27,10 @@ public class Computer {
     private static int nextID;
     public int id;
 
-    public boolean isEditing;
-    public String activeFile;
-    public Stack<String> output;
-    static int maxLines = 17;
+    static int maxTerminalLines = 17;
+    public Stack<String> terminalOutput;
+
+    HashMap<String, String> files;
 
     public EntityPlayerMP user;
     public World world;
@@ -40,8 +42,8 @@ public class Computer {
         this.world = world;
         id = computerID;
         Computers.add(this);
-        output = new Stack<String>();
-        activeFile = "";
+        terminalOutput = new Stack<String>();
+        files = new HashMap<String, String>();
     }
 
     public Computer(World world){
@@ -49,19 +51,17 @@ public class Computer {
     }
 
     public NBTTagCompound writeNBT(NBTTagCompound tag){
-        tag.setString("file", activeFile);
         NBTTagList list = new NBTTagList();
-        for(String line : output)
+        for(String line : terminalOutput)
             list.appendTag(new NBTTagString(line));
-        tag.setTag("output", list);
+        tag.setTag("terminalOutput", list);
         return tag;
     }
 
     public void readNBT(NBTTagCompound tag){
-        activeFile = tag.getString("file");
-        NBTTagList list = tag.getTagList("output", 8);
+        NBTTagList list = tag.getTagList("terminalOutput", 8);
         for(int i = 0; i < list.tagCount(); i++)
-            output.push(list.getStringTagAt(i));
+            terminalOutput.push(list.getStringTagAt(i));
     }
 
     public void onDestroy(){
@@ -82,10 +82,56 @@ public class Computer {
 
     public void parseAndRun(String command){
         String[] words = command.split(" ");
-        if(words[0].equals("run"))
-            activeThread = Scripting.runInNewThread(activeFile, getBindings());
-        if(words[0].equals("edit"))
-            ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this), user);
+
+        if(words.length < 0)
+            return;
+
+        String commandName = words[0];
+
+        switch (commandName){
+            case "run":
+                String path = getArgument("path", 1, words);
+                if(path == null)
+                    return;
+                activeThread = Scripting.runInNewThread(readFile(path), getBindings());
+                return;
+            case "edit":
+                path = getArgument("path", 1, words);
+                if(path == null)
+                    return;
+                ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this, path, readFile(path)), user);
+                return;
+            case "remove":
+                path = getArgument("path", 1, words);
+                if(path == null)
+                    return;
+                files.remove(path);
+                return;
+            case "clear":
+                terminalOutput.clear();
+                ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLEAR_SCREEN), user);
+                return;
+            default:
+                print("That is not a recognized command!");
+        }
+    }
+
+    public String getArgument(String name, int location, String[] arguments){
+        if(arguments.length <= location){
+            print("Missing " + name + " argument.");
+            return null;
+        }
+        return  arguments[location];
+    }
+
+    public void writeFile(String path, String text){
+        files.put(path, text);
+    }
+
+    public String readFile(String path){
+        if(!files.containsKey(path))
+            writeFile(path, "");
+        return files.get(path);
     }
 
     public void print(String line){
@@ -95,9 +141,9 @@ public class Computer {
     }
 
     public void printLocal(String line){
-        output.push(line);
-        if(output.size() > maxLines)
-            output.remove(0);
+        terminalOutput.push(line);
+        if(terminalOutput.size() > maxTerminalLines)
+            terminalOutput.remove(0);
     }
 
     public void openOSGui(EntityPlayer player){
@@ -121,5 +167,24 @@ public class Computer {
         bindings.put("print", (Consumer<Object>) (Object o) -> {print(o.toString());});
 
         return bindings;
+    }
+
+    public void updateComputer(){
+        if(user != null){
+            if(!inRange(user))
+                user = null;
+        }
+    }
+
+    public boolean canOpen(EntityPlayer player){
+        return user == null && inRange(player);
+    }
+
+    public boolean canUse(EntityPlayer player){
+        return player == user;
+    }
+
+    public boolean inRange(EntityPlayer player){
+        return entity.getDistanceSq(player.posX, player.posY, player.posZ) < 5 * 5;
     }
 }
