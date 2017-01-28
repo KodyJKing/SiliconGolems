@@ -29,7 +29,7 @@ public class Computer {
     private static int nextID;
     public int id;
 
-    static int maxTerminalLines = 17;
+    static int maxTerminalLines = 34;
     public Stack<String> terminalOutput;
 
     HashMap<String, String> files;
@@ -104,15 +104,8 @@ public class Computer {
         String commandName = words[0];
 
         switch (commandName){
-            case "run":
-                String path = getArgument("path", 1, words);
-                if(path == null)
-                    return;
-                activeThread = Scripting.runInNewThread(readFile(path), getBindings());
-                runningProgram = path;
-                return;
             case "edit":
-                path = getArgument("path", 1, words);
+                String path = getArgument("path", 1, words);
                 if(path == null)
                     return;
                 ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this, path, readFile(path)), user);
@@ -127,9 +120,19 @@ public class Computer {
                 terminalOutput.clear();
                 ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLEAR_SCREEN), user);
                 return;
-            default:
-                print("That is not a recognized command!");
+            case "ls":
+                for(String key: files.keySet())
+                    print("-" + key);
+                return;
         }
+
+        if(files.containsKey(commandName)){
+            activeThread = Scripting.runInNewThread(readFile(commandName), getBindings());
+            runningProgram = commandName;
+            return;
+        }
+
+        print("That is not a recognized command!");
     }
 
     public String getArgument(String name, int location, String[] arguments){
@@ -196,7 +199,7 @@ public class Computer {
                 if(activeThread.errorMessage == null)
                     print("Program finished.");
                 else
-                    print(activeThread.errorMessage.replaceAll("<eval>", runningProgram));
+                    print(activeThread.errorMessage.replaceAll("<eval>", "\"" + runningProgram + "\""));
                 activeThread = null;
             }
         }

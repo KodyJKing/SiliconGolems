@@ -10,20 +10,33 @@ import silicongolems.entity.EntitySiliconGolem;
 public class WrapperGolem {
 
     private EntitySiliconGolem golem;
+    private boolean autoSnap = true;
 
     public WrapperGolem(EntitySiliconGolem golem){
         this.golem = golem;
     }
 
+    public void grid(boolean val){
+        autoSnap = val;
+    }
+
     public void turn(float angle){
         golem.rotationYawHead += angle;
         golem.rotationYaw = golem.rotationYawHead;
+        if(autoSnap) {
+            snap();
+            align();
+        }
     }
 
     public void move(){
         float dx = -MathHelper.sin(golem.rotationYaw * 0.017453292F);
         float dz = MathHelper.cos(golem.rotationYaw * 0.017453292F);
         golem.moveEntity(dx, 0, dz);
+        if(autoSnap) {
+            snap();
+            align();
+        }
         sleep(250);
     }
 
@@ -43,7 +56,7 @@ public class WrapperGolem {
         golem.rotationYaw = golem.rotationYawHead;
     }
 
-    public void build(int forward, int up, int right){
+    public boolean build(int forward, int up, int right){
         right = Common.clamp(-1, 1, right);
         up = Common.clamp(-1, 1, up);
         forward = Common.clamp(-1, 1, forward);
@@ -53,7 +66,11 @@ public class WrapperGolem {
 
         BlockPos pos = new BlockPos(golem).offset(forwardFacing, forward).offset(rightFacing, right).add(0, up, 0);
 
+        if(!golem.worldObj.isAirBlock(pos))
+            return false;
         golem.worldObj.setBlockState(pos, Blocks.STONEBRICK.getDefaultState());
+        sleep(125);
+        return true;
     }
 
     private void sleep(int milis){
