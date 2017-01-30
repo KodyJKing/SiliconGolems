@@ -5,15 +5,21 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
+import silicongolems.SiliconGolems;
+import silicongolems.common.Common;
 import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
+import silicongolems.gui.ModGuiHandler;
 import silicongolems.network.MessageOpenComputer;
 import silicongolems.network.ModPacketHandler;
 
@@ -26,6 +32,8 @@ public class EntitySiliconGolem extends EntityLiving {
 
     public silicongolems.computer.Computer computer;
 
+    public InventoryBasic inventory;
+
     public EntitySiliconGolem(World world) {
         super(world);
         this.setSize(1.4F * 0.5F, 1);
@@ -33,32 +41,25 @@ public class EntitySiliconGolem extends EntityLiving {
             computer = Computers.add(new Computer(world));
             computer.entity = this;
         }
+        inventory = new InventoryBasic("container.siliconGolem", false, 27);
     }
 
-    public void executeCommand(String command){
-        System.out.println(command);
-    }
-
+    //region Primary
     @Override
     protected boolean processInteract(EntityPlayer player, EnumHand hand, @Nullable ItemStack stack) {
-        if(!worldObj.isRemote && !player.isSneaking() && computer.canOpen(player)){
+        if(worldObj.isRemote)
+            return true;
+
+        if(!player.isSneaking() && computer.canOpen(player)){
             computer.user = (EntityPlayerMP) player;
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
+        } else if(player.isSneaking()){
+            System.out.println("Trying to open gui!");
+            ModGuiHandler.activeGolemID = this.getEntityId();
+            player.openGui(SiliconGolems.instance, 1, worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
         }
 
         return true;
-    }
-
-    @Override
-    public void writeEntityToNBT(NBTTagCompound compound) {
-        super.writeEntityToNBT(compound);
-        computer.writeNBT(compound);
-    }
-
-    @Override
-    public void readEntityFromNBT(NBTTagCompound compound) {
-        super.readEntityFromNBT(compound);
-        computer.readNBT(compound);
     }
 
     @Override
@@ -79,9 +80,30 @@ public class EntitySiliconGolem extends EntityLiving {
         if(!worldObj.isRemote)
             computer.updateComputer();
     }
+    //endregion
 
-    // Boiler Plate Below -------------------------------------------
+    //region NBT
+    @Override
+    public void writeEntityToNBT(NBTTagCompound nbt) {
+        super.writeEntityToNBT(nbt);
 
+        nbt.setTag("inventory", Common.invToNbt(inventory));
+
+        computer.writeNBT(nbt);
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound nbt) {
+        super.readEntityFromNBT(nbt);
+
+        NBTTagList inventoryNbt = nbt.getTagList("inventory", 10);
+        Common.nbtToInv(inventoryNbt, inventory);
+
+        computer.readNBT(nbt);
+    }
+    //endregion
+
+    //region Clear AI
     @Override
     protected void initEntityAI() {
     }
@@ -90,14 +112,9 @@ public class EntitySiliconGolem extends EntityLiving {
     public boolean isAIDisabled() {
         return true;
     }
+    //endregion
 
-    @Override
-    public void setMoveForward(float amount) {
-        super.setMoveForward(amount);
-    }
-
-    // Rotation Locking -------------------------------------------
-
+    //region Rotation Locking
     @Override
     public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
         if(isRotationLocked())
@@ -140,10 +157,9 @@ public class EntitySiliconGolem extends EntityLiving {
     public boolean isRotationLocked() {
         return !worldObj.isRemote && rotationLocked;
     }
+    //endregion
 
-
-    // Sounds -------------------------------------------
-
+    //region Sounds
     @Nullable
     @Override
     protected SoundEvent getHurtSound() {
@@ -171,4 +187,5 @@ public class EntitySiliconGolem extends EntityLiving {
     protected float getSoundVolume() {
         return 0.5F;
     }
+    //endregion
 }

@@ -1,5 +1,6 @@
 package silicongolems.gui.texteditor;
 
+import net.minecraft.util.ChatAllowedCharacters;
 import silicongolems.common.Common;
 
 //Manages operations on text.
@@ -42,21 +43,52 @@ public class TextEditor {
         return lines.get(i);
     }
 
+    //region typing
     public void type(String str) {
+        if(str.length() == 1 && ChatAllowedCharacters.isAllowedCharacter(str.charAt(0))){
+            getLine().insert(cursorX, str);
+            cursorX++;
+        } else {
+            typeLines(str);
+        }
+    }
+
+    public void typeLines(String str){
         int lineNum = 0;
-        for(String substr : str.split("\n", -1))
-        {
+        for(String substr : str.split("\n", -1)) {
+            substr = Common.removeUnprintable(substr);
             if(lineNum++ > 0)
-                newline();
+                newline(false);
             getLine().insert(cursorX, substr);
             cursorX += substr.length();
         }
     }
+    //endregion
 
-    public void newline(){
+    //region newline
+    public void newline(boolean isEditing){
+        int indent = isEditing ? getIndent() : 0;
+        boolean makeBlock = isEditing ? shouldMakeBlock() : false;
+
         splitLine();
         cursorY++;
         cursorX = 0;
+
+        if(!isEditing)
+            return;
+
+        doIndent(indent);
+
+        if(makeBlock){
+            doIndent(4);
+            int oldx = cursorX;
+            int oldy = cursorY;
+            newline(true);
+            doIndent(indent);
+            type("}");
+            cursorX = oldx;
+            cursorY = oldy;
+        }
     }
 
     public void splitLine(){
@@ -66,6 +98,34 @@ public class TextEditor {
         lines.add(cursorY + 1, new StringBuilder(newLine));
     }
 
+    public int getIndent(){
+        int currLine = getIndent(cursorY);
+        if(cursorY + 1 >= lines.size())
+            return  currLine;
+        return Math.max(currLine, getIndent(cursorY + 1));
+    }
+
+    public boolean shouldMakeBlock(){
+        boolean curly = safeGetChar(cursorX - 1) == '{';
+        if(cursorY + 1 >= lines.size())
+            return curly;
+        else
+            return curly && getIndent(cursorY) >= getIndent(cursorY + 1);
+    }
+
+    public int getIndent(int linenum){
+        String line = getLine(linenum).toString();
+        int i = 0;
+        for(; i < line.length() && line.charAt(i) == ' '; i++);
+        return i;
+    }
+
+    public void doIndent(int indent){
+        for(int i = 0; i < indent; i++) type(" ");
+    }
+    //endregion
+
+    //region backspace
     public void backspace(){
         if(cursorX > 0){
             getLine().deleteCharAt(cursorX - 1);
@@ -75,6 +135,20 @@ public class TextEditor {
         }
     }
 
+    public void mergeLines(){
+        if(cursorY <= 0)
+            return;
+
+        StringBuilder lowerLine = lines.remove(cursorY);
+        StringBuilder upperLine = getLine(cursorY - 1);
+        cursorX = upperLine.length();
+
+        upperLine.append(lowerLine);
+        cursorY--;
+    }
+    //endregion
+
+    //region ctrl-actions
     public void ctrlBackspace(){
         int stop = ctrlSkip(-1);
         if(stop == cursorX - 1)
@@ -87,9 +161,14 @@ public class TextEditor {
         }
     }
 
-    public void ctrlMove(int dir){
-        cursorX = ctrlSkip(dir);
-        clampX();
+    public void ctrlMove(int dir) {
+        int stop = ctrlSkip(dir);
+        if (stop == cursorX + dir){
+            moveCursorX(dir);
+        } else {
+            cursorX = ctrlSkip(dir);
+            clampX();
+        }
     }
 
     /**
@@ -133,19 +212,9 @@ public class TextEditor {
 
         return currX;
     }
+    //endregion
 
-    public void mergeLines(){
-        if(cursorY <= 0)
-            return;
-
-        StringBuilder lowerLine = lines.remove(cursorY);
-        StringBuilder upperLine = getLine(cursorY - 1);
-        cursorX = upperLine.length();
-
-        upperLine.append(lowerLine);
-        cursorY--;
-    }
-
+    //region cursor logic
     public void moveCursorX(int amount){
         if(cursorX == 0 && amount < 0){
             int oldY = cursorY;
@@ -180,6 +249,7 @@ public class TextEditor {
         cursorY = Common.clamp(0, lines.size() - 1, cursorY);
         clampX();
     }
+    //endregion
 
     public boolean inLine(int index){
         return index >= 0 && index < getLine().length();

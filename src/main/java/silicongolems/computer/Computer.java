@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.world.World;
 import silicongolems.SiliconGolems;
+import silicongolems.common.Common;
 import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.gui.ModGuiHandler;
 import silicongolems.javascript.JSThread;
@@ -22,7 +23,9 @@ import javax.script.SimpleBindings;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class Computer {
 
@@ -33,6 +36,8 @@ public class Computer {
     public Stack<String> terminalOutput;
 
     HashMap<String, String> files;
+
+    String input;
 
     public EntityPlayerMP user;
     public World world;
@@ -53,6 +58,7 @@ public class Computer {
         this(world, nextID++);
     }
 
+    //region NBT
     public NBTTagCompound writeNBT(NBTTagCompound nbt){
         NBTTagCompound filesNbt = new NBTTagCompound();
         for(Map.Entry<String, String> entry: files.entrySet())
@@ -75,27 +81,26 @@ public class Computer {
         for(int i = 0; i < terminalNbt.tagCount(); i++)
             terminalOutput.push(terminalNbt.getStringTagAt(i));
     }
+    //endregion
 
-    public void onDestroy(){
-        killProcess();
-        Computers.remove(this);
+    //region Commands
+    public void onInput(String input){
+        if(activeThread != null && activeThread.getState() == Thread.State.WAITING)
+            inputToProgram(input);
+        else if(activeThread == null || !activeThread.isAlive())
+            parseAndRun(input);
     }
 
-    public void killProcess(){
-        if(activeThread != null){
-            activeThread.stop();
-            print("Terminated program.");
+    public void inputToProgram(String input){
+        synchronized (activeThread){
+            this.input = input;
+            activeThread.notify();
         }
     }
 
-    public void executeCommand(String command){
-        if(activeThread != null && activeThread.isAlive())
-            return;
-        print(">" + command);
-        parseAndRun(command);
-    }
-
     public void parseAndRun(String command){
+        print(">" + command);
+
         String[] words = command.split(" ");
 
         if(words.length < 0)
@@ -110,7 +115,7 @@ public class Computer {
                     return;
                 ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this, path, readFile(path)), user);
                 return;
-            case "remove":
+            case "rm":
                 path = getArgument("path", 1, words);
                 if(path == null)
                     return;
@@ -143,6 +148,43 @@ public class Computer {
         return  arguments[location];
     }
 
+    public Bindings getBindings(){
+        SimpleBindings bindings = new SimpleBindings();
+
+        bindings.put("golem", new WrapperGolem(entity));
+
+        bindings.put("sleep", (Consumer<Integer>) (Integer milis) -> {
+            try{
+                Thread.sleep(milis);
+            } catch (InterruptedException e){
+                e.printStackTrace();
+            }
+        });
+
+        bindings.put("print", (Consumer<Object>) (Object o) -> {print(o.toString());});
+
+        bindings.put("input", (Supplier<String>) () -> {
+            try {
+                synchronized (activeThread){
+                    activeThread.wait();
+                    return input;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+
+        bindings.put("exit", (BooleanSupplier) () -> {
+            activeThread.stop();
+            return true;
+        });
+
+        return bindings;
+    }
+    //endregion
+
+    //region State
     public void writeFile(String path, String text){
         files.put(path, text);
     }
@@ -160,34 +202,16 @@ public class Computer {
     }
 
     public void printLocal(String line){
-        terminalOutput.push(line);
-        if(terminalOutput.size() > maxTerminalLines)
-            terminalOutput.remove(0);
+        for(String substr: line.split("\n")){
+            substr = Common.removeUnprintable(substr);
+            terminalOutput.push(substr);
+            if(terminalOutput.size() > maxTerminalLines)
+                terminalOutput.remove(0);
+        }
     }
+    //endregion
 
-    public void openComputerGui(EntityPlayer player){
-        ModGuiHandler.activeComputer = this;
-        player.openGui(SiliconGolems.instance, 0, player.worldObj, 0, 0, 0);
-    }
-
-    public Bindings getBindings(){
-        SimpleBindings bindings = new SimpleBindings();
-
-        bindings.put("golem", new WrapperGolem(entity));
-
-        bindings.put("sleep", (Consumer<Integer>) (Integer milis) -> {
-            try{
-                Thread.sleep(milis);
-            } catch (InterruptedException e){
-                e.printStackTrace();
-            }
-        });
-
-        bindings.put("print", (Consumer<Object>) (Object o) -> {print(o.toString());});
-
-        return bindings;
-    }
-
+    //region Logic
     public void updateComputer(){
         if(user != null){
             if(!inRange(user)){
@@ -205,6 +229,18 @@ public class Computer {
         }
     }
 
+    public void onDestroy(){
+        killProcess();
+        Computers.remove(this);
+    }
+
+    public void killProcess(){
+        if(activeThread != null){
+            activeThread.stop();
+            print("Terminated program.");
+        }
+    }
+
     public boolean canOpen(EntityPlayer player){
         return user == null && inRange(player);
     }
@@ -216,4 +252,10 @@ public class Computer {
     public boolean inRange(EntityPlayer player){
         return entity.getDistanceSq(player.posX, player.posY, player.posZ) < 5 * 5;
     }
+
+    public void openComputerGui(EntityPlayer player){
+        ModGuiHandler.activeComputer = this;
+        player.openGui(SiliconGolems.instance, 0, player.worldObj, 0, 0, 0);
+    }
+    //endregion
 }

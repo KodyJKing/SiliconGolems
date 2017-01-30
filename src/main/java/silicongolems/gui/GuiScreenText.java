@@ -119,8 +119,12 @@ public class GuiScreenText extends GuiScreen {
     public void keyTyped(char c, int keyCode) throws IOException {
         boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL);
 
+        //System.out.println(keyCode); //Comment me out!
+
         if(isKeyComboCtrlT(keyCode))
             onCtrlT();
+        else if(keyCode == 15)
+            onType("    ");
         if(keyCode == 1 && !onEscape())
             super.keyTyped(c, keyCode);
         else if(GuiScreen.isKeyComboCtrlV(keyCode))

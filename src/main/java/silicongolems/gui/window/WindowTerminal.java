@@ -1,13 +1,12 @@
 package silicongolems.gui.window;
 
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.text.TextFormatting;
 import silicongolems.common.Common;
 import silicongolems.computer.Computer;
 import silicongolems.gui.GuiScreenOS;
 import silicongolems.gui.texteditor.TextEditor;
 import silicongolems.network.MessageByte;
-import silicongolems.network.MessageCommand;
+import silicongolems.network.MessageInput;
 import silicongolems.network.ModPacketHandler;
 
 import java.util.Stack;
@@ -73,7 +72,7 @@ public class WindowTerminal extends Window {
         input.clear();
         cmdIndex = cmdHistory.size();
 
-        ModPacketHandler.INSTANCE.sendToServer(new MessageCommand(computer, cmd));
+        ModPacketHandler.INSTANCE.sendToServer(new MessageInput(computer, cmd));
         clampScroll();
     }
 

@@ -70,7 +70,7 @@ public class WindowEditor extends Window {
 
     @Override
     public void onEnter() {
-        editor.newline();
+        editor.newline(true);
         clampScroll();
     }
 

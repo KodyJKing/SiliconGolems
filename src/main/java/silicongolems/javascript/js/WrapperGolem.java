@@ -1,6 +1,7 @@
 package silicongolems.javascript.js;
 
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -73,7 +74,17 @@ public class WrapperGolem {
         return true;
     }
 
+    public WrapperItemStack scanStack(int i){
+        ItemStack stack = golem.inventory.getStackInSlot(i);
+        return stack == null ? null : new WrapperItemStack(stack);
+    }
+
     private void sleep(int milis){
         try{ Thread.sleep(milis); } catch (Exception e) {e.printStackTrace();}
+    }
+
+    @Override
+    public String toString() {
+        return "golem" + Integer.toString(golem.getEntityId());
     }
 }

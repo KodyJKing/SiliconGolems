@@ -18,7 +18,7 @@ public class ModPacketHandler {
         INSTANCE.registerMessage(MessageOpenComputer.Handler.class, MessageOpenComputer.class, id++, Side.CLIENT);
         INSTANCE.registerMessage(MessageOpenComputer.Handler.class, MessageOpenComputer.class, id++, Side.SERVER);
 
-        INSTANCE.registerMessage(MessageCommand.Handler.class, MessageCommand.class, id++, Side.SERVER);
+        INSTANCE.registerMessage(MessageInput.Handler.class, MessageInput.class, id++, Side.SERVER);
 
         INSTANCE.registerMessage(MessagePrint.Handler.class, MessagePrint.class, id++, Side.CLIENT);
 

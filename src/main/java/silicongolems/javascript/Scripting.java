@@ -13,7 +13,7 @@ public class Scripting {
         ScriptEngine engine;
 
         NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        engine = factory.getScriptEngine(new SiliconGolemsFilter());
+        engine = factory.getScriptEngine(new JSFilter());
         Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
         bindings.remove("print");
         bindings.remove("load");

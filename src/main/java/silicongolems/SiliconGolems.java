@@ -38,11 +38,11 @@ public class SiliconGolems
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
+        NetworkRegistry.INSTANCE.registerGuiHandler(instance, new ModGuiHandler());
     }
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        NetworkRegistry.INSTANCE.registerGuiHandler(instance, new ModGuiHandler());
     }
 
     /*
