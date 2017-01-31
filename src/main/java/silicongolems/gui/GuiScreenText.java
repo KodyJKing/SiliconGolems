@@ -26,7 +26,7 @@ public class GuiScreenText extends GuiScreen {
     private int charWidth = 3;//6;
     private int charHeight = 4;//8;
 
-    public int textScale = 2;
+    public int invTextScale = 2;
 
     @Override
     public void initGui() {
@@ -63,11 +63,11 @@ public class GuiScreenText extends GuiScreen {
 //    }
 
     public int cellX(int textX){
-        return textX * charWidth * textScale;
+        return textX * charWidth * invTextScale;
     }
 
     public int cellY(int textY){
-        return textY * charHeight * textScale;
+        return textY * charHeight * invTextScale;
     }
 
     public void drawChar(int x, int y, char c, TextFormatting color){
@@ -77,7 +77,7 @@ public class GuiScreenText extends GuiScreen {
     public void drawChar(int x, int y, char c, TextFormatting color, boolean fixThin){
         GlStateManager.pushMatrix();
         GlStateManager.translate(textCornerX(), textCornerY(), 0);
-        GlStateManager.scale(1.0 / textScale, 1.0 / textScale, 1.0 / textScale);
+        GlStateManager.scale(1.0 / invTextScale, 1.0 / invTextScale, 1.0 / invTextScale);
         int xAdjust = fixThin && isThin(c) ? 2 : 0;
         this.fontRendererObj.drawString(
                 color + Character.toString(c),

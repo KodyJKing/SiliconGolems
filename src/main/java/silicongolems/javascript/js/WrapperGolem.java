@@ -6,16 +6,19 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import silicongolems.common.Common;
+import silicongolems.computer.Computer;
 import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.javascript.ConvertData;
 
 public class WrapperGolem {
 
     private EntitySiliconGolem golem;
+    private Computer computer;
     private boolean autoSnap = true;
 
     public WrapperGolem(EntitySiliconGolem golem){
         this.golem = golem;
+        computer = golem.computer;
     }
 
     public void grid(boolean val){
@@ -30,24 +33,25 @@ public class WrapperGolem {
             align();
         }
         golem.rotationDirty = true;
+        computer.awaitUpdate(0);
     }
 
     public void move(){
-        float dx = -MathHelper.sin(golem.rotationYaw * 0.017453292F);
+        float dx = -MathHelper.sin(golem.rotationYaw * 0.017453292F); //0.017453292F = PI / 180, degrees to radians
         float dz = MathHelper.cos(golem.rotationYaw * 0.017453292F);
         golem.moveEntity(dx, 0, dz);
         if(autoSnap) {
             snap();
             align();
         }
-        sleep(250);
+        computer.awaitUpdate(250);
     }
 
     public void jump(){
         if(!golem.onGround)
             return;
         golem.motionY = 0.42;
-        sleep(250);
+        computer.awaitUpdate(250);
     }
 
     public void snap(){
@@ -73,17 +77,13 @@ public class WrapperGolem {
         if(!golem.worldObj.isAirBlock(pos))
             return false;
         golem.worldObj.setBlockState(pos, Blocks.STONEBRICK.getDefaultState());
-        sleep(125);
+        computer.awaitUpdate(125);
         return true;
     }
 
     public Object scanStack(int i){
         ItemStack stack = golem.inventory.getStackInSlot(i);
         return stack == null ? null : ConvertData.itemStackData(stack);
-    }
-
-    private void sleep(int milis){
-        try{ Thread.sleep(milis); } catch (Exception e) {e.printStackTrace();}
     }
 
     @Override

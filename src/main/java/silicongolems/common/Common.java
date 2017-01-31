@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -77,5 +78,16 @@ public class Common {
         }
 
         return lines;
+    }
+
+    public static boolean isGamePaused(){
+        if(FMLCommonHandler.instance().getSide() == Side.CLIENT)
+            return isGamePausedClient();
+        return false;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static boolean isGamePausedClient(){
+        return Minecraft.getMinecraft().isGamePaused();
     }
 }

@@ -36,6 +36,8 @@ public class Computer {
     static int maxTerminalWidth = 77;
     public Stack<String> terminalOutput;
 
+    public boolean awaitingInput;
+
     HashMap<String, String> files;
 
     String input;
@@ -44,7 +46,7 @@ public class Computer {
     public World world;
     public EntitySiliconGolem entity;
 
-    public JSThread activeThread;
+    public JSThread programThread;
     public String runningProgram;
 
     public Computer(World world, int computerID){
@@ -84,20 +86,19 @@ public class Computer {
     }
     //endregion
 
-    //region Commands
+    //region Commands and Scripting
     public void onInput(String input){
-        if(input.equals("sleep") && activeThread != null && activeThread.isAlive())
-            try{synchronized (activeThread){activeThread.sleep(10000);}}catch(Exception e){e.printStackTrace();}
-        if(activeThread != null && activeThread.getState() == Thread.State.WAITING)
+        if(programThread != null && awaitingInput && programThread.getState() == Thread.State.WAITING)
             inputToProgram(input);
-        else if(activeThread == null || !activeThread.isAlive())
+        else if(programThread == null || !programThread.isAlive())
             parseAndRun(input);
     }
 
     public void inputToProgram(String input){
-        synchronized (activeThread){
+        synchronized (programThread){
             this.input = input;
-            activeThread.notify();
+            awaitingInput = false;
+            programThread.notify();
         }
     }
 
@@ -112,35 +113,55 @@ public class Computer {
         String commandName = words[0];
 
         switch (commandName){
-            case "edit":
+            case "edit": {
                 String path = getArgument("path", 1, words);
                 if(path == null)
                     return;
-                ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this, path, readFile(path)), user);
+                ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this, path, readOrMakeFile(path)), user);
                 return;
-            case "rm":
-                path = getArgument("path", 1, words);
+            }
+            case "rm": {
+                String path = getArgument("path", 1, words);
                 if(path == null)
                     return;
                 files.remove(path);
                 return;
-            case "clear":
+            }
+            case "clear": {
                 terminalOutput.clear();
                 ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLEAR_SCREEN), user);
                 return;
-            case "ls":
-                for(String key: files.keySet())
+            }
+            case "ls": {
+                for (String key : files.keySet())
                     print("-" + key);
                 return;
+            }
+            case "cp": {
+                String frompath = getArgument("from", 1, words);
+                String topath = getArgument("to", 2, words);
+                if(frompath == null || topath == null || !checkFile(frompath))
+                    return;
+                writeFile(topath, readOrMakeFile(frompath));
+                return;
+            }
         }
 
         if(files.containsKey(commandName)){
-            activeThread = Scripting.runInNewThread(readFile(commandName), getBindings());
+            programThread = Scripting.runInNewThread(readOrMakeFile(commandName), getBindings());
             runningProgram = commandName;
             return;
         }
 
         print("That is not a recognized command!");
+    }
+
+    public boolean checkFile(String path){
+        if(!files.containsKey(path)){
+            print("There is no file named " + path + ".");
+            return false;
+        }
+        return true;
     }
 
     public String getArgument(String name, int location, String[] arguments){
@@ -168,8 +189,9 @@ public class Computer {
 
         bindings.put("input", (Supplier<String>) () -> {
             try {
-                synchronized (activeThread){
-                    activeThread.wait();
+                synchronized (programThread){
+                    awaitingInput = true;
+                    programThread.wait();
                     return input;
                 }
             } catch (InterruptedException e) {
@@ -179,7 +201,7 @@ public class Computer {
         });
 
         bindings.put("exit", (BooleanSupplier) () -> {
-            activeThread.stop();
+            programThread.stop();
             return true;
         });
 
@@ -192,9 +214,15 @@ public class Computer {
         files.put(path, text);
     }
 
-    public String readFile(String path){
+    public String readOrMakeFile(String path){
         if(!files.containsKey(path))
             writeFile(path, "");
+        return files.get(path);
+    }
+
+    public String readFile(String path) throws Exception{
+        if(!files.containsKey(path))
+            throw new Exception("File not found!");
         return files.get(path);
     }
 
@@ -214,21 +242,36 @@ public class Computer {
     }
     //endregion
 
-    //region Logic
+    //region Logic and Threading
     public void updateComputer(){
-        if(user != null){
-            if(!inRange(user)){
-                ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLOSE_COMPUTER), user);
-                user = null;
-            }
+        if (user != null && !inRange(user)) {
+            ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLOSE_COMPUTER), user);
+            user = null;
+        }
 
-            if(activeThread != null && !activeThread.isAlive()){
-                if(activeThread.errorMessage == null)
-                    print("Program finished.");
-                else
-                    print(activeThread.errorMessage.replaceAll("<eval>", "\"" + runningProgram + "\""));
-                activeThread = null;
-            }
+        if(programThread != null && !programThread.isAlive()){
+            if(programThread.errorMessage == null)
+                print("Program finished.");
+            else
+                print(programThread.errorMessage.replaceAll("<eval>", "\"" + runningProgram + "\""));
+            programThread = null;
+        }
+
+        if(awaitingUpdate()){
+            synchronized (programThread) {programThread.notify();}
+        }
+    }
+
+    private boolean awaitingUpdate() {
+        return programThread != null && programThread.getState() == Thread.State.WAITING && !awaitingInput;
+    }
+
+    public void awaitUpdate(int sleepMilis){
+        synchronized(programThread) {
+            try{
+                if(sleepMilis > 0) Thread.sleep(sleepMilis);
+                programThread.wait();
+            } catch (InterruptedException e) {e.printStackTrace();}
         }
     }
 
@@ -238,8 +281,8 @@ public class Computer {
     }
 
     public void killProcess(){
-        if(activeThread != null){
-            activeThread.stop();
+        if(programThread != null){
+            programThread.stop();
             print("Terminated program.");
         }
     }
@@ -256,9 +299,10 @@ public class Computer {
         return entity.getDistanceSq(player.posX, player.posY, player.posZ) < 5 * 5;
     }
 
+    //endregion
+
     public void openComputerGui(EntityPlayer player){
         ModGuiHandler.activeComputer = this;
         player.openGui(SiliconGolems.instance, 0, player.worldObj, 0, 0, 0);
     }
-    //endregion
 }

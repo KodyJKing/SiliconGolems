@@ -1,6 +1,7 @@
 package silicongolems.javascript;
 
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import jdk.nashorn.internal.runtime.Context;
 
 import javax.script.*;
 
@@ -20,6 +21,7 @@ public class Scripting {
         bindings.remove("loadWithNewGlobal");
         bindings.remove("exit");
         bindings.remove("quit");
+
         return engine;
     }
 
@@ -28,7 +30,7 @@ public class Scripting {
             ScriptEngine engine = getEngine();
             if(bindings != null)
                 engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(bindings);
-
+            
             engine.eval(script);
 
         } catch (ScriptException e){

@@ -31,7 +31,7 @@ public class SiliconGolems
     public void preInit(FMLPreInitializationEvent event) {
         System.out.println(name + " is loading!");
         ModItems.init();
-        EntityRegistry.registerModEntity(EntitySiliconGolem.class, "siliconGolem", 0, instance, 80, 1, true, 0xFFFFCC, 0xCCCCA3);
+        EntityRegistry.registerModEntity(EntitySiliconGolem.class, "siliconGolem", 0, instance, 100, 1, true, 0xFFFFCC, 0xCCCCA3);
         proxy.registerEntityRendering();
         ModPacketHandler.registerPackets();
     }
@@ -44,26 +44,4 @@ public class SiliconGolems
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
     }
-
-    /*
-     * TODO:
-     *
-     * Priority 1: DONE
-     * Move all gui's into one tabbed GuiScreenHost or GuiScreenOS.
-     * Clean up transition from editor tabs to terminal. No packets should be sent.
-     *
-     * Priority 2: DONE
-     * Implement a file system.
-     * Implement more os commands, possibly move command handling into another class and 'OOPify' commands.
-     *
-     * Priority 3:
-     * Consider implementing a container so the server knows when the gui is open and closed.
-     * Consider text editor improvements: auto-indent, copy, mouse select, mouse drag.
-     *
-     * Priority 4:
-     * Consider creating a system to automatically synchronize computers and their components across the net.
-     * The system should represent component as a tree of components.
-     * The leaves should be wrapped java types so they can be watched and auto synced.
-     * Allow components to specify if they are synchronized.
-     */
 }
