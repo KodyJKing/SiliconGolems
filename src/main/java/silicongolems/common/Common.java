@@ -1,11 +1,17 @@
 package silicongolems.common;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatAllowedCharacters;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class Common {
@@ -47,5 +53,29 @@ public class Common {
                 builder.append(c);
         }
         return builder.toString();
+    }
+
+    public static List<String> printableLines(String str, int maxWidth){
+
+        ArrayList<String> lines = new ArrayList<String>();
+        StringBuilder builder = new StringBuilder();
+        int width = 0;
+
+        for(Character c: str.toCharArray()){
+            if(ChatAllowedCharacters.isAllowedCharacter(c))
+                builder.append(c);
+
+            if(++width >= maxWidth || c == '\n'){
+                width = 0;
+                lines.add(builder.toString());
+                builder = new StringBuilder();
+            }
+        }
+
+        if(builder.length() > 0){
+            lines.add(builder.toString());
+        }
+
+        return lines;
     }
 }

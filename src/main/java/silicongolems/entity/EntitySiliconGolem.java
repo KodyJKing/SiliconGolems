@@ -13,13 +13,14 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import silicongolems.SiliconGolems;
 import silicongolems.common.Common;
 import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
 import silicongolems.gui.ModGuiHandler;
+import silicongolems.network.MessageHeading;
 import silicongolems.network.MessageOpenComputer;
 import silicongolems.network.ModPacketHandler;
 
@@ -74,11 +75,17 @@ public class EntitySiliconGolem extends EntityLiving {
         computer.onDestroy();
     }
 
+    public boolean rotationDirty = false;
     @Override
     public void onEntityUpdate() {
         super.onEntityUpdate();
-        if(!worldObj.isRemote)
+        if(!worldObj.isRemote){
             computer.updateComputer();
+            if(rotationDirty){
+                ModPacketHandler.INSTANCE.sendToAllAround(new MessageHeading(this), new NetworkRegistry.TargetPoint(dimension, posX, posY, posZ, 100));
+                rotationDirty = false;
+            }
+        }
     }
     //endregion
 

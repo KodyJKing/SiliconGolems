@@ -7,6 +7,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import silicongolems.common.Common;
 import silicongolems.entity.EntitySiliconGolem;
+import silicongolems.javascript.ConvertData;
 
 public class WrapperGolem {
 
@@ -28,6 +29,7 @@ public class WrapperGolem {
             snap();
             align();
         }
+        golem.rotationDirty = true;
     }
 
     public void move(){
@@ -55,6 +57,7 @@ public class WrapperGolem {
     public void align(){
         golem.rotationYawHead = Math.round(golem.rotationYawHead / 90) * 90;
         golem.rotationYaw = golem.rotationYawHead;
+        golem.rotationDirty = true;
     }
 
     public boolean build(int forward, int up, int right){
@@ -74,9 +77,9 @@ public class WrapperGolem {
         return true;
     }
 
-    public WrapperItemStack scanStack(int i){
+    public Object scanStack(int i){
         ItemStack stack = golem.inventory.getStackInSlot(i);
-        return stack == null ? null : new WrapperItemStack(stack);
+        return stack == null ? null : ConvertData.itemStackData(stack);
     }
 
     private void sleep(int milis){

@@ -24,6 +24,8 @@ public class ModPacketHandler {
 
         INSTANCE.registerMessage(MessageByte.Handler.class, MessageByte.class, id++, Side.SERVER);
         INSTANCE.registerMessage(MessageByte.Handler.class, MessageByte.class, id++, Side.CLIENT);
+
+        INSTANCE.registerMessage(MessageHeading.Handler.class, MessageHeading.class, id++, Side.CLIENT);
     }
 
 }

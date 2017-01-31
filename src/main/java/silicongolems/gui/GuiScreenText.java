@@ -20,11 +20,11 @@ public class GuiScreenText extends GuiScreen {
     private int editorHeight = 166;
     private int boarderWidth = 8;
 
-    private int textWidth = 38;
-    private int textHeight = 18;
+    private int textWidth = 77;//38;
+    private int textHeight = 37;//18;
 
-    private int charWidth = 6;
-    private int charHeight = 8;
+    private int charWidth = 3;//6;
+    private int charHeight = 4;//8;
 
     public int textScale = 2;
 
@@ -51,7 +51,7 @@ public class GuiScreenText extends GuiScreen {
     }
 
     public int textCornerY(){
-        return cornerY() + getBoarderWidth() + getCharHeight() / 2;
+        return cornerY() + getBoarderWidth() ; //+ getCharHeight() / 2;
     }
 
 //    public int cellX(int textX){
@@ -63,11 +63,11 @@ public class GuiScreenText extends GuiScreen {
 //    }
 
     public int cellX(int textX){
-        return textX * charWidth;
+        return textX * charWidth * textScale;
     }
 
     public int cellY(int textY){
-        return textY * charHeight;
+        return textY * charHeight * textScale;
     }
 
     public void drawChar(int x, int y, char c, TextFormatting color){
@@ -182,15 +182,15 @@ public class GuiScreenText extends GuiScreen {
         return boarderWidth;
     }
     public int getTextWidth() {
-        return textWidth * textScale;
+        return textWidth;
     }
     public int getTextHeight() {
-        return textHeight * textScale;
+        return textHeight;
     }
     public int getCharWidth() {
-        return charWidth / textScale;
+        return charWidth;
     }
     public int getCharHeight() {
-        return charHeight / textScale;
+        return charHeight;
     }
 }

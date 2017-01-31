@@ -83,7 +83,7 @@ public class TextEditor {
             doIndent(4);
             int oldx = cursorX;
             int oldy = cursorY;
-            newline(true);
+            newline(false);
             doIndent(indent);
             type("}");
             cursorX = oldx;
@@ -105,14 +105,6 @@ public class TextEditor {
         return Math.max(currLine, getIndent(cursorY + 1));
     }
 
-    public boolean shouldMakeBlock(){
-        boolean curly = safeGetChar(cursorX - 1) == '{';
-        if(cursorY + 1 >= lines.size())
-            return curly;
-        else
-            return curly && getIndent(cursorY) >= getIndent(cursorY + 1);
-    }
-
     public int getIndent(int linenum){
         String line = getLine(linenum).toString();
         int i = 0;
@@ -122,6 +114,14 @@ public class TextEditor {
 
     public void doIndent(int indent){
         for(int i = 0; i < indent; i++) type(" ");
+    }
+
+    public boolean shouldMakeBlock(){
+        boolean curly = safeGetChar(cursorX - 1) == '{';
+        if(cursorY + 1 >= lines.size())
+            return curly;
+        else
+            return curly && getIndent(cursorY) >= getIndent(cursorY + 1);
     }
     //endregion
 

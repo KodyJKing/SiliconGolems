@@ -32,7 +32,8 @@ public class Computer {
     private static int nextID;
     public int id;
 
-    static int maxTerminalLines = 34;
+    static int maxTerminalLines = 36;
+    static int maxTerminalWidth = 77;
     public Stack<String> terminalOutput;
 
     HashMap<String, String> files;
@@ -85,6 +86,8 @@ public class Computer {
 
     //region Commands
     public void onInput(String input){
+        if(input.equals("sleep") && activeThread != null && activeThread.isAlive())
+            try{synchronized (activeThread){activeThread.sleep(10000);}}catch(Exception e){e.printStackTrace();}
         if(activeThread != null && activeThread.getState() == Thread.State.WAITING)
             inputToProgram(input);
         else if(activeThread == null || !activeThread.isAlive())
@@ -202,9 +205,9 @@ public class Computer {
     }
 
     public void printLocal(String line){
-        for(String substr: line.split("\n")){
-            substr = Common.removeUnprintable(substr);
-            terminalOutput.push(substr);
+        for(String subline: Common.printableLines(line, maxTerminalWidth)){
+            subline = Common.removeUnprintable(subline);
+            terminalOutput.push(subline);
             if(terminalOutput.size() > maxTerminalLines)
                 terminalOutput.remove(0);
         }
