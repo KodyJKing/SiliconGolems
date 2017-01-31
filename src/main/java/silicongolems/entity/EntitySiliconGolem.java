@@ -195,4 +195,7 @@ public class EntitySiliconGolem extends EntityLiving {
         return 0.5F;
     }
     //endregion
+
+
+
 }

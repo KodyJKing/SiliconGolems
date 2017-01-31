@@ -16,7 +16,7 @@ import silicongolems.network.MessageOpenCloseFile;
 import silicongolems.network.MessagePrint;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.javascript.Scripting;
-import silicongolems.javascript.js.WrapperGolem;
+import silicongolems.javascript.WrapperGolem;
 
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
