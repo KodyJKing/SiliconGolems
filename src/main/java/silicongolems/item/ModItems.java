@@ -7,10 +7,11 @@ import silicongolems.item.ItemDevTool;
 
 public class ModItems {
 
-    public static ItemBase devTool;
+    public static ItemBase devTool, siliconGolem;
 
     public static void init(){
         devTool = register(new ItemDevTool("devTool"));
+        siliconGolem = register(new ItemSiliconGolem("siliconGolem"));
     }
 
     private static <T extends Item> T register(T item) {

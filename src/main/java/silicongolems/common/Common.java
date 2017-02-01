@@ -80,14 +80,18 @@ public class Common {
         return lines;
     }
 
-    public static boolean isGamePaused(){
-        if(FMLCommonHandler.instance().getSide() == Side.CLIENT)
-            return isGamePausedClient();
-        return false;
-    }
+//    public static boolean isGamePaused(){
+//        if(FMLCommonHandler.instance().getSide() == Side.CLIENT)
+//            return isGamePausedClient();
+//        return false;
+//    }
+//
+//    @SideOnly(Side.CLIENT)
+//    private static boolean isGamePausedClient(){
+//        return Minecraft.getMinecraft().isGamePaused();
+//    }
 
-    @SideOnly(Side.CLIENT)
-    private static boolean isGamePausedClient(){
-        return Minecraft.getMinecraft().isGamePaused();
+    public static double roundTo(double val, double round){
+        return Math.round(val / round) * round;
     }
 }

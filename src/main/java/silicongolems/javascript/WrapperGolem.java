@@ -37,13 +37,18 @@ public class WrapperGolem {
     }
 
     public void turn(float angle){
-        golem.rotationYawHead += angle;
-        golem.rotationYaw = golem.rotationYawHead;
-        if(autoSnap) {
-            snap();
-            align();
-        }
-        golem.rotationDirty = true;
+
+        computer.addJob(() -> {
+            golem.rotationYawHead += angle;
+            golem.rotationYaw = golem.rotationYawHead;
+            if(autoSnap) {
+                snap();
+                align();
+            }
+            golem.rotationDirty = true;
+        });
+
+
         computer.awaitUpdate(0);
     }
 
@@ -53,11 +58,14 @@ public class WrapperGolem {
 
         float dx = -MathHelper.sin(golem.rotationYaw * 0.017453292F); //0.017453292F = PI / 180, degrees to radians
         float dz = MathHelper.cos(golem.rotationYaw * 0.017453292F);
-        golem.moveEntity(dx, 0, dz);
-        if(autoSnap) {
-            snap();
-            align();
-        }
+
+        computer.addJob(() -> {
+            golem.moveEntity(dx, 0, dz);
+            if(autoSnap) {
+                snap();
+                align();
+            }});
+
         computer.awaitUpdate(250);
 
         return oldx != ((int) golem.posX) || oldz != ((int) golem.posZ);
@@ -75,34 +83,36 @@ public class WrapperGolem {
         return ((int) golem.posY) != oldy;
     }
 
-    public void snap(){
-        golem.setPosition(Math.floor(golem.posX) + 0.5,  golem.posY, Math.floor(golem.posZ) + 0.5);
+    private void snap(){
+        computer.addJob(() -> {golem.setPosition(Math.floor(golem.posX) + 0.5,  golem.posY, Math.floor(golem.posZ) + 0.5);});
     }
 
-    public void align(){
-        golem.rotationYawHead = Math.round(golem.rotationYawHead / 90) * 90;
-        golem.rotationYaw = golem.rotationYawHead;
-        golem.rotationDirty = true;
+    private void align(){
+        computer.addJob(() -> {
+            golem.rotationYawHead = Math.round(golem.rotationYawHead / 90) * 90;
+            golem.rotationYaw = golem.rotationYawHead;
+            golem.rotationDirty = true;
+        });
     }
 
-    public boolean build(int forward, int up, int right){
+    public void build(int forward, int up, int right){
         BlockPos pos = relPos(forward, up, right);
 
         if(!golem.worldObj.isAirBlock(pos))
-            return false;
+            return;
 
-        golem.worldObj.setBlockState(pos, Blocks.STONEBRICK.getDefaultState());
+        computer.addJob(() -> {golem.worldObj.setBlockState(pos, Blocks.STONEBRICK.getDefaultState());});
         computer.awaitUpdate(125);
 
-        return true;
+        return;
     }
 
     public void use(int index, int forward, int up, int right){
         BlockPos pos = relPos(forward, up, right);
         ItemStack stack = golem.inventory.getStackInSlot(index);
         FakePlayer fp = getFakePlayer();
-        stack.onItemUse(fp, golem.worldObj, pos, EnumHand.MAIN_HAND, EnumFacing.UP, pos.getX(), pos.getY(), pos.getZ());
 
+        computer.addJob(() -> {stack.onItemUse(fp, golem.worldObj, pos, EnumHand.MAIN_HAND, EnumFacing.UP, pos.getX(), pos.getY(), pos.getZ());});
         computer.awaitUpdate(125);
     }
 
@@ -112,21 +122,21 @@ public class WrapperGolem {
         if(golem.worldObj.isAirBlock(pos))
             return false;
 
-        golem.worldObj.destroyBlock(pos, true);
+        computer.addJob(() -> {golem.worldObj.destroyBlock(pos, true);});
         computer.awaitUpdate(125);
 
         return true;
     }
 
     public void suck(){
-        BlockPos pos = new BlockPos(golem);
-        List<EntityItem> items = golem.worldObj.getEntitiesWithinAABB(EntityItem.class, new AxisAlignedBB(pos, pos.add(1, 1, 1)).expandXyz(1));
-        for(EntityItem item: items){
-            ItemStack remainder = golem.inventory.addItem(item.getEntityItem());
-            item.setEntityItemStack(remainder);
-            if(remainder == null || remainder.stackSize == 0)
-                item.setDead();
-        }
+        computer.addJob(() -> {        BlockPos pos = new BlockPos(golem);
+            List<EntityItem> items = golem.worldObj.getEntitiesWithinAABB(EntityItem.class, new AxisAlignedBB(pos, pos.add(1, 1, 1)).expandXyz(1));
+            for(EntityItem item: items){
+                ItemStack remainder = golem.inventory.addItem(item.getEntityItem());
+                item.setEntityItemStack(remainder);
+                if(remainder == null || remainder.stackSize == 0)
+                    item.setDead();
+            }});
         computer.awaitUpdate(62);
     }
 

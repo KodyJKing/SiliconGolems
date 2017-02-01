@@ -8,6 +8,7 @@ import net.minecraft.nbt.NBTTagString;
 import net.minecraft.world.World;
 import silicongolems.SiliconGolems;
 import silicongolems.common.Common;
+import silicongolems.common.Job;
 import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.gui.ModGuiHandler;
 import silicongolems.javascript.JSThread;
@@ -20,6 +21,7 @@ import silicongolems.javascript.WrapperGolem;
 
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -55,6 +57,8 @@ public class Computer {
         Computers.add(this);
         terminalOutput = new Stack<String>();
         files = new HashMap<String, String>();
+
+        BuiltinScripts.addScripts(this);
     }
 
     public Computer(World world){
@@ -259,6 +263,18 @@ public class Computer {
 
         if(awaitingUpdate()){
             synchronized (programThread) {programThread.notify();}
+        }
+
+        synchronized (jobs){
+            while(!jobs.isEmpty())
+                jobs.removeLast().run();
+        }
+    }
+
+    ArrayDeque<Job> jobs = new ArrayDeque<Job>();
+    public void addJob(Job job){
+        synchronized (jobs){
+            jobs.addFirst(job);
         }
     }
 

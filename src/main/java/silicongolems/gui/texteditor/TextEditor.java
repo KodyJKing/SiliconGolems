@@ -100,9 +100,9 @@ public class TextEditor {
 
     public int getIndent(){
         int currLine = getIndent(cursorY);
-        if(cursorY + 1 >= lines.size())
+        //if(cursorY + 1 >= lines.size())
             return  currLine;
-        return Math.max(currLine, getIndent(cursorY + 1));
+        //return Math.max(currLine, getIndent(cursorY + 1));
     }
 
     public int getIndent(int linenum){
@@ -117,7 +117,14 @@ public class TextEditor {
     }
 
     public boolean shouldMakeBlock(){
-        boolean curly = safeGetChar(cursorX - 1) == '{';
+        int curlies = 0;
+        for(int x = cursorX - 1; x >= 0; x--){
+            if(safeGetChar(x) == '{')
+                curlies++;
+            if(safeGetChar(x) == '}')
+                curlies--;
+        }
+        boolean curly = curlies > 0;
         if(cursorY + 1 >= lines.size())
             return curly;
         else
@@ -251,11 +258,17 @@ public class TextEditor {
     }
     //endregion
 
-    public boolean inLine(int index){
-        return index >= 0 && index < getLine().length();
+    public boolean inLine(int x){
+        return inLine(x, cursorY);
+    }
+    public boolean inLine(int x, int y){
+        return x >= 0 && x < getLine(y).length();
     }
 
-    public char safeGetChar(int index){
-        return inLine(index) ? getLine().charAt(index) : '\0';
+    public char safeGetChar(int x){
+        return safeGetChar(x, cursorY);
+    }
+    public char safeGetChar(int x, int y){
+        return inLine(x) ? getLine(y).charAt(x) : '\0';
     }
 }

@@ -1,3 +1,5 @@
 entity.silicongolems.siliconGolem.name=Silicon Golem
 container.siliconGolem=Silicon Golem
+item.siliconGolem.name=Silicon Golem
+
 item.devTool.name=Dev Tool

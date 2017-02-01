@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 public class MessageHeading implements IMessage {
 
     int entityId;
-    float yaw, pitch, headPitch, headYaw;
+    float yaw, pitch, headYaw;
 
     public MessageHeading() {}
 
