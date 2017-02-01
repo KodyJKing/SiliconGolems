@@ -1,21 +1,15 @@
-package silicongolems.common;
+package silicongolems.util;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatAllowedCharacters;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-public class Common {
+public class Util {
 
     public static boolean blink(int period, int duration){
         return System.currentTimeMillis() % period < duration;

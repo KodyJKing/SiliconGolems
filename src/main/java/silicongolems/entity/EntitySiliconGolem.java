@@ -4,7 +4,6 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.EntityLookHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
@@ -20,13 +19,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import silicongolems.SiliconGolems;
-import silicongolems.common.Common;
+import silicongolems.util.Util;
 import silicongolems.computer.Computer;
 import silicongolems.computer.Computers;
 import silicongolems.gui.ModGuiHandler;
+import silicongolems.inventory.InventoryFakePlayer;
 import silicongolems.item.ModItems;
 import silicongolems.network.MessageHeading;
 import silicongolems.network.MessageOpenComputer;
@@ -42,30 +41,22 @@ public class EntitySiliconGolem extends EntityLiving {
     public int attackTime = 0;
 
     public Computer computer;
-    public FakePlayer fakePlayer;
+    private FakePlayer fakePlayer;
 
     public InventoryBasic inventory;
 
     public EntitySiliconGolem(World world) {
         super(world);
         this.setSize(1.4F * 0.5F, 1);
+        inventory = new InventoryBasic("container.siliconGolem", false, 27);
         if(!world.isRemote){
             computer = Computers.add(new Computer(world));
             computer.entity = this;
 
-            WorldServer server = getServer().worldServerForDimension(dimension);
-            fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
-            fakePlayer.rotationYaw = rotationYaw;
-            fakePlayer.rotationPitch = rotationPitch;
-            fakePlayer.rotationYawHead = rotationYawHead;
+//            WorldServer server = getServer().worldServerForDimension(dimension);
+//            fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
+//            fakePlayer.inventory = new InventoryFakePlayer(fakePlayer, inventory);
         }
-        inventory = new InventoryBasic("container.siliconGolem", false, 27);
-    }
-
-    @Override
-    protected void applyEntityAttributes() {
-        super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(2);
     }
 
     //region Primary
@@ -78,7 +69,6 @@ public class EntitySiliconGolem extends EntityLiving {
             computer.user = (EntityPlayerMP) player;
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
         } else if(player.isSneaking()){
-            System.out.println("Trying to open gui!");
             ModGuiHandler.activeGolemID = this.getEntityId();
             player.openGui(SiliconGolems.instance, 1, worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
         }
@@ -121,6 +111,32 @@ public class EntitySiliconGolem extends EntityLiving {
             }
         }
     }
+
+    @Override
+    protected void applyEntityAttributes() {
+        super.applyEntityAttributes();
+        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(2);
+    }
+
+    public FakePlayer getFakePlayer(){
+        WorldServer server = getServer().worldServerForDimension(dimension);
+        fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
+        fakePlayer.inventory = new InventoryFakePlayer(fakePlayer, inventory);
+
+        fakePlayer.posX = posX;
+        fakePlayer.posY = posY;
+        fakePlayer.posZ = posZ;
+        fakePlayer.rotationYaw = rotationYaw;
+        fakePlayer.rotationPitch = rotationPitch;
+        fakePlayer.rotationYawHead = rotationYawHead;
+        return fakePlayer;
+    }
+
+    @Override
+    public boolean canBePushed() {
+        return false;
+    }
+
     //endregion
 
     //region NBT
@@ -128,7 +144,7 @@ public class EntitySiliconGolem extends EntityLiving {
     public void writeEntityToNBT(NBTTagCompound nbt) {
         super.writeEntityToNBT(nbt);
 
-        nbt.setTag("inventory", Common.invToNbt(inventory));
+        nbt.setTag("inventory", Util.invToNbt(inventory));
 
         computer.writeNBT(nbt);
     }
@@ -138,7 +154,7 @@ public class EntitySiliconGolem extends EntityLiving {
         super.readEntityFromNBT(nbt);
 
         NBTTagList inventoryNbt = nbt.getTagList("inventory", 10);
-        Common.nbtToInv(inventoryNbt, inventory);
+        Util.nbtToInv(inventoryNbt, inventory);
 
         computer.readNBT(nbt);
     }

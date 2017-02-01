@@ -17,10 +17,12 @@ public class ConvertData {
 
         Item item = stack.getItem();
 
-        map.put("itemId", Item.getIdFromItem(item));
+        map.put("id", Item.getIdFromItem(item));
+        map.put("meta", stack.getMetadata());
+
         map.put("stackSize", stack.stackSize);
         map.put("maxStackSize", stack.getMaxStackSize());
-        map.put("meta", stack.getMetadata());
+
         map.put("damage", stack.getItemDamage());
         map.put("maxDamage", stack.getMaxDamage());
 
@@ -37,9 +39,11 @@ public class ConvertData {
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
 
-        map.put("blockId", Block.getIdFromBlock(block));
+        map.put("id", Block.getIdFromBlock(block));
         map.put("meta", block.getMetaFromState(state));
+
         map.put("power", world.isBlockPowered(pos));
+        map.put("light", world.getLightFromNeighbors(pos));
 
         map.put("displayName", block.getLocalizedName());
         map.put("name", block.getUnlocalizedName());

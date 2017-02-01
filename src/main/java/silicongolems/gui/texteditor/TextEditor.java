@@ -1,7 +1,7 @@
 package silicongolems.gui.texteditor;
 
 import net.minecraft.util.ChatAllowedCharacters;
-import silicongolems.common.Common;
+import silicongolems.util.Util;
 
 //Manages operations on text.
 public class TextEditor {
@@ -56,7 +56,7 @@ public class TextEditor {
     public void typeLines(String str){
         int lineNum = 0;
         for(String substr : str.split("\n", -1)) {
-            substr = Common.removeUnprintable(substr);
+            substr = Util.removeUnprintable(substr);
             if(lineNum++ > 0)
                 newline(false);
             getLine().insert(cursorX, substr);
@@ -80,11 +80,10 @@ public class TextEditor {
         doIndent(indent);
 
         if(makeBlock){
-            doIndent(4);
             int oldx = cursorX;
             int oldy = cursorY;
             newline(false);
-            doIndent(indent);
+            doIndent(indent - 4);
             type("}");
             cursorX = oldx;
             cursorY = oldy;
@@ -99,10 +98,11 @@ public class TextEditor {
     }
 
     public int getIndent(){
-        int currLine = getIndent(cursorY);
-        //if(cursorY + 1 >= lines.size())
-            return  currLine;
-        //return Math.max(currLine, getIndent(cursorY + 1));
+        boolean curly = safeGetChar(cursorX -1) == '{';
+        int indent = getIndent(cursorY);
+        if(safeGetChar(cursorX -1) == '{')
+            indent += 4;
+        return indent;
     }
 
     public int getIndent(int linenum){
@@ -117,14 +117,7 @@ public class TextEditor {
     }
 
     public boolean shouldMakeBlock(){
-        int curlies = 0;
-        for(int x = cursorX - 1; x >= 0; x--){
-            if(safeGetChar(x) == '{')
-                curlies++;
-            if(safeGetChar(x) == '}')
-                curlies--;
-        }
-        boolean curly = curlies > 0;
+        boolean curly = safeGetChar(cursorX -1) == '{';
         if(cursorY + 1 >= lines.size())
             return curly;
         else
@@ -249,11 +242,11 @@ public class TextEditor {
     }
 
     public void clampX(){
-        cursorX = Common.clamp(0, getLine().length(), cursorX);
+        cursorX = Util.clamp(0, getLine().length(), cursorX);
     }
 
     public void clampY(){
-        cursorY = Common.clamp(0, lines.size() - 1, cursorY);
+        cursorY = Util.clamp(0, lines.size() - 1, cursorY);
         clampX();
     }
     //endregion

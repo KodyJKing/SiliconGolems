@@ -1,7 +1,7 @@
 package silicongolems.gui.window;
 
 import net.minecraft.util.text.TextFormatting;
-import silicongolems.common.Common;
+import silicongolems.util.Util;
 import silicongolems.computer.Computer;
 import silicongolems.gui.GuiScreenOS;
 import silicongolems.gui.texteditor.TextEditor;
@@ -61,7 +61,7 @@ public class WindowTerminal extends Window {
         }
 
         int cursorX = 1 + input.cursorX - scrollX;
-        if(cursorX < getTextWidth() && Common.blink(1000, 500))
+        if(cursorX < getTextWidth() && Util.blink(1000, 500))
             drawChar(cursorX, getTextHeight() - 1, '_', TextFormatting.DARK_GREEN);
     }
 
@@ -79,7 +79,7 @@ public class WindowTerminal extends Window {
     @Override
     public void onVertArrow(int dir) {
         int lastInd = cmdIndex;
-        cmdIndex = Common.clamp(0, cmdHistory.size(), cmdIndex + dir);
+        cmdIndex = Util.clamp(0, cmdHistory.size(), cmdIndex + dir);
         if(lastInd == cmdIndex)
             return;
 
@@ -125,7 +125,7 @@ public class WindowTerminal extends Window {
     public void clampScroll(){
         //This statement is odd on purpose, there is an extra +1 because of the '>' character in the input field.
         //Compare to WindowEditor.clampScroll().
-        scrollX = Common.clamp(input.cursorX + 1 + 1 - getTextWidth(), input.cursorX, scrollX);
+        scrollX = Util.clamp(input.cursorX + 1 + 1 - getTextWidth(), input.cursorX, scrollX);
     }
 
     @Override

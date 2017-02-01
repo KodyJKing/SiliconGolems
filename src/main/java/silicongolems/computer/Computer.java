@@ -7,8 +7,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.world.World;
 import silicongolems.SiliconGolems;
-import silicongolems.common.Common;
-import silicongolems.common.Job;
+import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.gui.ModGuiHandler;
 import silicongolems.javascript.JSThread;
@@ -237,8 +236,8 @@ public class Computer {
     }
 
     public void printLocal(String line){
-        for(String subline: Common.printableLines(line, maxTerminalWidth)){
-            subline = Common.removeUnprintable(subline);
+        for(String subline: Util.printableLines(line, maxTerminalWidth)){
+            subline = Util.removeUnprintable(subline);
             terminalOutput.push(subline);
             if(terminalOutput.size() > maxTerminalLines)
                 terminalOutput.remove(0);

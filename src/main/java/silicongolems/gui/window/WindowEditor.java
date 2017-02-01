@@ -1,9 +1,8 @@
 package silicongolems.gui.window;
 
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.text.TextFormatting;
-import silicongolems.common.Common;
+import silicongolems.util.Util;
 import silicongolems.computer.Computer;
 import silicongolems.gui.GuiScreenOS;
 import silicongolems.gui.texteditor.TextEditor;
@@ -50,14 +49,14 @@ public class WindowEditor extends Window {
             y++;
         }
 
-        if(Common.blink(1000, 500))
+        if(Util.blink(1000, 500))
             drawChar(editor.cursorX - scrollX, editor.cursorY - scrollY, '_', TextFormatting.DARK_GREEN);
     }
 
     //Keep the cursor in view.
     public void clampScroll(){
-        scrollX = Common.clamp(editor.cursorX - getTextWidth() + 1, editor.cursorX, scrollX);
-        scrollY = Common.clamp(editor.cursorY - getTextHeight() + 1, editor.cursorY, scrollY);
+        scrollX = Util.clamp(editor.cursorX - getTextWidth() + 1, editor.cursorX, scrollX);
+        scrollY = Util.clamp(editor.cursorY - getTextHeight() + 1, editor.cursorY, scrollY);
     }
 
     @Override

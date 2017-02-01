@@ -1,25 +1,20 @@
 package silicongolems.javascript;
 
-import com.mojang.authlib.GameProfile;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.WorldServer;
+import net.minecraft.util.math.*;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.common.util.FakePlayerFactory;
-import scala.Int;
-import silicongolems.common.Common;
+import silicongolems.util.FakePlayerUtil;
+import silicongolems.util.Util;
 import silicongolems.computer.Computer;
 import silicongolems.entity.EntitySiliconGolem;
 
 import java.util.List;
-import java.util.UUID;
 
 public class WrapperGolem {
 
@@ -83,11 +78,11 @@ public class WrapperGolem {
         return ((int) golem.posY) != oldy;
     }
 
-    private void snap(){
+    public void snap(){
         computer.addJob(() -> {golem.setPosition(Math.floor(golem.posX) + 0.5,  golem.posY, Math.floor(golem.posZ) + 0.5);});
     }
 
-    private void align(){
+    public void align(){
         computer.addJob(() -> {
             golem.rotationYawHead = Math.round(golem.rotationYawHead / 90) * 90;
             golem.rotationYaw = golem.rotationYawHead;
@@ -95,41 +90,70 @@ public class WrapperGolem {
         });
     }
 
-    public void build(int forward, int up, int right){
-        BlockPos pos = relPos(forward, up, right);
-
-        if(!golem.worldObj.isAirBlock(pos))
-            return;
-
-        computer.addJob(() -> {golem.worldObj.setBlockState(pos, Blocks.STONEBRICK.getDefaultState());});
-        computer.awaitUpdate(125);
-
-        return;
-    }
-
     public void use(int index, int forward, int up, int right){
+        EnumFacing dir = up == 0 ? golem.getHorizontalFacing().getOpposite() : (up == -1 ? EnumFacing.UP : EnumFacing.DOWN);
+
         BlockPos pos = relPos(forward, up, right);
         ItemStack stack = golem.inventory.getStackInSlot(index);
-        FakePlayer fp = getFakePlayer();
+        FakePlayer fp = golem.getFakePlayer();
 
-        computer.addJob(() -> {stack.onItemUse(fp, golem.worldObj, pos, EnumHand.MAIN_HAND, EnumFacing.UP, pos.getX(), pos.getY(), pos.getZ());});
+        computer.addJob(() -> {
+            fp.inventory.currentItem = index;
+            fp.interactionManager.processRightClickBlock(fp, golem.worldObj, stack, EnumHand.MAIN_HAND, pos, dir, pos.getX(), pos.getY(), pos.getZ());
+            if(stack != null && stack.stackSize == 0)
+                golem.inventory.setInventorySlotContents(index, null);
+        });
         computer.awaitUpdate(125);
     }
 
-    public boolean dig(int forward, int up, int right){
+    public void use(int index){use(index, 1, 0, 0);}
+
+    public void click(int index, float pitch){
+        golem.rotationPitch = pitch;
+        FakePlayer fp = golem.getFakePlayer();
+
+        ItemStack stack = golem.inventory.getStackInSlot(index);
+
+        computer.addJob(() -> {
+            fp.inventory.currentItem = index;
+            FakePlayerUtil.rightClick(fp, golem, stack);
+
+            if(stack != null && stack.stackSize == 0)
+                golem.inventory.setInventorySlotContents(index, null);
+        });
+        computer.awaitUpdate(125);
+    }
+    public void click(int index){click(index, 0);}
+
+    public boolean dig(int forward, int up, int right, boolean drop){
         BlockPos pos = relPos(forward, up, right);
 
         if(golem.worldObj.isAirBlock(pos))
             return false;
 
-        computer.addJob(() -> {golem.worldObj.destroyBlock(pos, true);});
+        computer.addJob(() -> {
+            IBlockState state = golem.worldObj.getBlockState(pos);
+            golem.worldObj.destroyBlock(pos, drop);
+
+            if(!drop){
+                List<ItemStack> drops = state.getBlock().getDrops(golem.worldObj, pos, state, 0);
+                for(ItemStack stack: drops){
+                    ItemStack remainder = golem.inventory.addItem(stack);
+                    if(remainder != null && remainder.stackSize > 0)
+                        Block.spawnAsEntity(golem.worldObj, pos, remainder);
+                }
+            }
+        });
         computer.awaitUpdate(125);
 
         return true;
     }
+    public void dig(int forward, int up, int right) {dig(forward, up, right, false);}
+    public void dig(){dig(1, 0, 0, false);}
 
     public void suck(){
-        computer.addJob(() -> {        BlockPos pos = new BlockPos(golem);
+        computer.addJob(() -> {
+            BlockPos pos = new BlockPos(golem);
             List<EntityItem> items = golem.worldObj.getEntitiesWithinAABB(EntityItem.class, new AxisAlignedBB(pos, pos.add(1, 1, 1)).expandXyz(1));
             for(EntityItem item: items){
                 ItemStack remainder = golem.inventory.addItem(item.getEntityItem());
@@ -151,15 +175,17 @@ public class WrapperGolem {
         return ConvertData.blockData(golem.worldObj, pos);
     }
 
+    public Object scan(){return scan(1, 0, 0);}
+
     @Override
     public String toString() {
         return "golem" + Integer.toString(golem.getEntityId());
     }
 
     private BlockPos relPos(int forward, int up, int right){
-        right = Common.clamp(-1, 1, right);
-        up = Common.clamp(-1, 1, up);
-        forward = Common.clamp(-1, 1, forward);
+        right = Util.clamp(-1, 1, right);
+        up = Util.clamp(-1, 1, up);
+        forward = Util.clamp(-1, 1, forward);
 
         EnumFacing forwardFacing = golem.getHorizontalFacing();
         EnumFacing rightFacing = forwardFacing.rotateY();
@@ -167,14 +193,5 @@ public class WrapperGolem {
         BlockPos pos = new BlockPos(golem).offset(forwardFacing, forward).offset(rightFacing, right).add(0, up, 0);
 
         return pos;
-    }
-
-    private FakePlayer getFakePlayer(){
-        WorldServer server = golem.getServer().worldServerForDimension(golem.dimension);
-        FakePlayer fp = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem"));
-        fp.rotationYaw = golem.rotationYaw;
-        fp.rotationPitch = golem.rotationPitch;
-        fp.rotationYawHead = golem.rotationYawHead;
-        return fp;
     }
 }
