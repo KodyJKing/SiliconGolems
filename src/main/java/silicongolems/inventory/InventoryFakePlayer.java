@@ -131,5 +131,10 @@ public class InventoryFakePlayer extends InventoryPlayer {
         }
     }
 
+    @Nullable
+    @Override
+    public ItemStack getCurrentItem() {
+        return inventory.getStackInSlot(currentItem);
+    }
 
 }

@@ -90,6 +90,33 @@ public class WrapperGolem {
         });
     }
 
+    public boolean build(int index, int forward, int up, int right){
+        BlockPos pos = relPos(forward, up, right);
+
+        if(!golem.worldObj.isAirBlock(pos))
+            return false;
+
+        ItemStack stack = golem.inventory.getStackInSlot(index);
+        if(stack == null)
+            return false;
+        Block block = Block.getBlockFromItem(stack.getItem());
+        if(block == null)
+            return false;
+
+        FakePlayer fp = golem.getFakePlayer();
+
+        computer.addJob(() -> {
+            golem.worldObj.setBlockState(pos, block.getStateForPlacement(
+                    golem.worldObj, pos, EnumFacing.UP,
+                    pos.getX(), pos.getY(), pos.getZ(),
+                    stack.getMetadata(), fp, stack));
+        });
+        computer.awaitUpdate(125);
+
+        return true;
+    }
+    public boolean build(int index){ return build(index, 1, 0, 0);}
+
     public void use(int index, int forward, int up, int right){
         EnumFacing dir = up == 0 ? golem.getHorizontalFacing().getOpposite() : (up == -1 ? EnumFacing.UP : EnumFacing.DOWN);
 
@@ -99,7 +126,9 @@ public class WrapperGolem {
 
         computer.addJob(() -> {
             fp.inventory.currentItem = index;
-            fp.interactionManager.processRightClickBlock(fp, golem.worldObj, stack, EnumHand.MAIN_HAND, pos, dir, pos.getX(), pos.getY(), pos.getZ());
+            fp.interactionManager.processRightClickBlock(
+                    fp, golem.worldObj, stack, EnumHand.MAIN_HAND, pos, dir,
+                    pos.getX(), pos.getY(), pos.getZ());
             if(stack != null && stack.stackSize == 0)
                 golem.inventory.setInventorySlotContents(index, null);
         });
