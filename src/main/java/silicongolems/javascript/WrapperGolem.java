@@ -121,14 +121,17 @@ public class WrapperGolem {
         EnumFacing dir = up == 0 ? golem.getHorizontalFacing().getOpposite() : (up == -1 ? EnumFacing.UP : EnumFacing.DOWN);
 
         BlockPos pos = relPos(forward, up, right);
-        ItemStack stack = golem.inventory.getStackInSlot(index);
         FakePlayer fp = golem.getFakePlayer();
 
         computer.addJob(() -> {
+            ItemStack stack = golem.inventory.getStackInSlot(index);
+
             fp.inventory.currentItem = index;
             fp.interactionManager.processRightClickBlock(
                     fp, golem.worldObj, stack, EnumHand.MAIN_HAND, pos, dir,
                     pos.getX(), pos.getY(), pos.getZ());
+
+            stack = golem.inventory.getStackInSlot(index);
             if(stack != null && stack.stackSize == 0)
                 golem.inventory.setInventorySlotContents(index, null);
         });
@@ -141,12 +144,13 @@ public class WrapperGolem {
         golem.rotationPitch = pitch;
         FakePlayer fp = golem.getFakePlayer();
 
-        ItemStack stack = golem.inventory.getStackInSlot(index);
-
         computer.addJob(() -> {
+            ItemStack stack = golem.inventory.getStackInSlot(index);
+
             fp.inventory.currentItem = index;
             FakePlayerUtil.rightClick(fp, golem, stack);
 
+            stack = golem.inventory.getStackInSlot(index);
             if(stack != null && stack.stackSize == 0)
                 golem.inventory.setInventorySlotContents(index, null);
         });
@@ -154,44 +158,44 @@ public class WrapperGolem {
     }
     public void click(int index){click(index, 0);}
 
-    public boolean dig(int forward, int up, int right, boolean drop){
-        BlockPos pos = relPos(forward, up, right);
+//    public boolean dig(int forward, int up, int right, boolean drop){
+//        BlockPos pos = relPos(forward, up, right);
+//
+//        if(golem.worldObj.isAirBlock(pos))
+//            return false;
+//
+//        computer.addJob(() -> {
+//            IBlockState state = golem.worldObj.getBlockState(pos);
+//            golem.worldObj.destroyBlock(pos, drop);
+//
+//            if(!drop){
+//                List<ItemStack> drops = state.getBlock().getDrops(golem.worldObj, pos, state, 0);
+//                for(ItemStack stack: drops){
+//                    ItemStack remainder = golem.inventory.addItem(stack);
+//                    if(remainder != null && remainder.stackSize > 0)
+//                        Block.spawnAsEntity(golem.worldObj, pos, remainder);
+//                }
+//            }
+//        });
+//        computer.awaitUpdate(125);
+//
+//        return true;
+//    }
+//    public void dig(int forward, int up, int right) {dig(forward, up, right, false);}
+//    public void dig(){dig(1, 0, 0, false);}
 
-        if(golem.worldObj.isAirBlock(pos))
-            return false;
-
-        computer.addJob(() -> {
-            IBlockState state = golem.worldObj.getBlockState(pos);
-            golem.worldObj.destroyBlock(pos, drop);
-
-            if(!drop){
-                List<ItemStack> drops = state.getBlock().getDrops(golem.worldObj, pos, state, 0);
-                for(ItemStack stack: drops){
-                    ItemStack remainder = golem.inventory.addItem(stack);
-                    if(remainder != null && remainder.stackSize > 0)
-                        Block.spawnAsEntity(golem.worldObj, pos, remainder);
-                }
-            }
-        });
-        computer.awaitUpdate(125);
-
-        return true;
-    }
-    public void dig(int forward, int up, int right) {dig(forward, up, right, false);}
-    public void dig(){dig(1, 0, 0, false);}
-
-    public void suck(){
-        computer.addJob(() -> {
-            BlockPos pos = new BlockPos(golem);
-            List<EntityItem> items = golem.worldObj.getEntitiesWithinAABB(EntityItem.class, new AxisAlignedBB(pos, pos.add(1, 1, 1)).expandXyz(1));
-            for(EntityItem item: items){
-                ItemStack remainder = golem.inventory.addItem(item.getEntityItem());
-                item.setEntityItemStack(remainder);
-                if(remainder == null || remainder.stackSize == 0)
-                    item.setDead();
-            }});
-        computer.awaitUpdate(62);
-    }
+//    public void suck(){
+//        computer.addJob(() -> {
+//            BlockPos pos = new BlockPos(golem);
+//            List<EntityItem> items = golem.worldObj.getEntitiesWithinAABB(EntityItem.class, new AxisAlignedBB(pos, pos.add(1, 1, 1)).expandXyz(1));
+//            for(EntityItem item: items){
+//                ItemStack remainder = golem.inventory.addItem(item.getEntityItem());
+//                item.setEntityItemStack(remainder);
+//                if(remainder == null || remainder.stackSize == 0)
+//                    item.setDead();
+//            }});
+//        computer.awaitUpdate(62);
+//    }
 
     public Object scanStack(int i){
         ItemStack stack = golem.inventory.getStackInSlot(i);

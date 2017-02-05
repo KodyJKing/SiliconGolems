@@ -6,6 +6,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
@@ -20,6 +21,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.items.wrapper.PlayerInvWrapper;
 import silicongolems.SiliconGolems;
 import silicongolems.util.Util;
 import silicongolems.computer.Computer;
@@ -43,19 +45,16 @@ public class EntitySiliconGolem extends EntityLiving {
     public Computer computer;
     private FakePlayer fakePlayer;
 
-    public InventoryBasic inventory;
+    public InventoryPlayer inventory;
 
     public EntitySiliconGolem(World world) {
         super(world);
         this.setSize(1.4F * 0.5F, 1);
-        inventory = new InventoryBasic("container.siliconGolem", false, 27);
+        //inventory = new InventoryBasic("container.siliconGolem", false, 27);
+        inventory = new InventoryPlayer(null);
         if(!world.isRemote){
             computer = Computers.add(new Computer(world));
             computer.entity = this;
-
-//            WorldServer server = getServer().worldServerForDimension(dimension);
-//            fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
-//            fakePlayer.inventory = new InventoryFakePlayer(fakePlayer, inventory);
         }
     }
 
@@ -121,7 +120,8 @@ public class EntitySiliconGolem extends EntityLiving {
     public FakePlayer getFakePlayer(){
         WorldServer server = getServer().worldServerForDimension(dimension);
         fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
-        fakePlayer.inventory = new InventoryFakePlayer(fakePlayer, inventory);
+        fakePlayer.inventory = inventory;//new InventoryFakePlayer(fakePlayer, inventory);
+        inventory.player = fakePlayer;
 
         fakePlayer.posX = posX;
         fakePlayer.posY = posY;
