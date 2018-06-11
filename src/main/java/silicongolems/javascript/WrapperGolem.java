@@ -2,6 +2,7 @@ package silicongolems.javascript;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -55,7 +56,8 @@ public class WrapperGolem {
         float dz = MathHelper.cos(golem.rotationYaw * 0.017453292F);
 
         computer.addJob(() -> {
-            golem.moveEntity(dx, 0, dz);
+//            golem.moveEntity(dx, 0, dz);
+            golem.move(MoverType.SELF, dx, 0, dz);
             if(autoSnap) {
                 snap();
                 align();
@@ -93,7 +95,7 @@ public class WrapperGolem {
     public boolean build(int index, int forward, int up, int right){
         BlockPos pos = relPos(forward, up, right);
 
-        if(!golem.worldObj.isAirBlock(pos))
+        if(!golem.world.isAirBlock(pos))
             return false;
 
         ItemStack stack = golem.inventory.getStackInSlot(index);
@@ -106,10 +108,10 @@ public class WrapperGolem {
         FakePlayer fp = golem.getFakePlayer();
 
         computer.addJob(() -> {
-            golem.worldObj.setBlockState(pos, block.getStateForPlacement(
-                    golem.worldObj, pos, EnumFacing.UP,
+            golem.world.setBlockState(pos, block.getStateForPlacement(
+                    golem.world, pos, EnumFacing.UP,
                     pos.getX(), pos.getY(), pos.getZ(),
-                    stack.getMetadata(), fp, stack));
+                    stack.getMetadata(), fp, EnumHand.MAIN_HAND));
         });
         computer.awaitUpdate(125);
 
@@ -128,12 +130,12 @@ public class WrapperGolem {
 
             fp.inventory.currentItem = index;
             fp.interactionManager.processRightClickBlock(
-                    fp, golem.worldObj, stack, EnumHand.MAIN_HAND, pos, dir,
+                    fp, golem.world, stack, EnumHand.MAIN_HAND, pos, dir,
                     pos.getX(), pos.getY(), pos.getZ());
 
             stack = golem.inventory.getStackInSlot(index);
-            if(stack != null && stack.stackSize == 0)
-                golem.inventory.setInventorySlotContents(index, null);
+            if(stack != null && stack.getCount() == 0)
+                golem.inventory.setInventorySlotContents(index, ItemStack.EMPTY);
         });
         computer.awaitUpdate(125);
     }
@@ -151,8 +153,8 @@ public class WrapperGolem {
             FakePlayerUtil.rightClick(fp, golem, stack);
 
             stack = golem.inventory.getStackInSlot(index);
-            if(stack != null && stack.stackSize == 0)
-                golem.inventory.setInventorySlotContents(index, null);
+            if(stack != ItemStack.EMPTY && stack.getCount() == 0)
+                golem.inventory.setInventorySlotContents(index, ItemStack.EMPTY);
         });
         computer.awaitUpdate(125);
     }
@@ -199,13 +201,13 @@ public class WrapperGolem {
 
     public Object scanStack(int i){
         ItemStack stack = golem.inventory.getStackInSlot(i);
-        return stack == null ? null : ConvertData.itemData(stack);
+        return stack == ItemStack.EMPTY ? null : ConvertData.itemData(stack);
     }
 
     public Object scan(int forward, int up, int right){
         BlockPos pos = relPos(forward, up, right);
 
-        return ConvertData.blockData(golem.worldObj, pos);
+        return ConvertData.blockData(golem.world, pos);
     }
 
     public Object scan(){return scan(1, 0, 0);}

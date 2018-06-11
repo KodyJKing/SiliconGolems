@@ -1,5 +1,8 @@
 package silicongolems;
 
+import net.minecraft.launchwrapper.Launch;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -14,7 +17,7 @@ import silicongolems.item.ModItems;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.proxy.CommonProxy;
 
-@Mod(modid = SiliconGolems.modId, version = SiliconGolems.version, acceptedMinecraftVersions = "[1.10.2]")
+@Mod(modid = SiliconGolems.modId, version = SiliconGolems.version, acceptedMinecraftVersions = "[1.12.2]")
 public class SiliconGolems
 {
     public static final String modId = "silicongolems";
@@ -27,11 +30,23 @@ public class SiliconGolems
     @Mod.Instance(modId)
     public static SiliconGolems instance;
 
-    @Mod.EventHandler
+    public static boolean devEnv = false;
+
+    @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         System.out.println(name + " is loading!");
-        ModItems.init();
-        EntityRegistry.registerModEntity(EntitySiliconGolem.class, "siliconGolem", 0, instance, 100, 1, true, 0xFFFFCC, 0xCCCCA3);
+
+        if ((boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment"))
+            devEnv = true;
+
+        MinecraftForge.EVENT_BUS.register(new ModItems());
+
+        EntityRegistry.registerModEntity(
+                new ResourceLocation(modId, "silicongolem"),
+                EntitySiliconGolem.class, modId + ".silicongolem",
+                0, this, 100, 1,
+                true,
+                0xFFFFCC, 0xCCCCA3);
         proxy.registerEntityRendering();
         ModPacketHandler.registerPackets();
     }
@@ -41,7 +56,7 @@ public class SiliconGolems
         NetworkRegistry.INSTANCE.registerGuiHandler(instance, new ModGuiHandler());
     }
 
-    @Mod.EventHandler
+    @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
     }
 }

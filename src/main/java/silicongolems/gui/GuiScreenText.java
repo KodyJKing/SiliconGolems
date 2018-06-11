@@ -79,7 +79,7 @@ public class GuiScreenText extends GuiScreen {
         GlStateManager.translate(textCornerX(), textCornerY(), 0);
         GlStateManager.scale(1.0 / invTextScale, 1.0 / invTextScale, 1.0 / invTextScale);
         int xAdjust = fixThin && isThin(c) ? 2 : 0;
-        this.fontRendererObj.drawString(
+        this.fontRenderer.drawString(
                 color + Character.toString(c),
                 cellX(x) + xAdjust,
                 cellY(y),

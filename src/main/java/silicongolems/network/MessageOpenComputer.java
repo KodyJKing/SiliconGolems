@@ -45,7 +45,7 @@ public class MessageOpenComputer extends MessageComputer {
         @SideOnly(Side.CLIENT)
         public void doClient(MessageOpenComputer message, MessageContext ctx, Computer computer) {
             computer.terminalOutput = message.output;
-            computer.openComputerGui(Minecraft.getMinecraft().thePlayer);
+            computer.openComputerGui(Minecraft.getMinecraft().player);
         }
 
         @Override

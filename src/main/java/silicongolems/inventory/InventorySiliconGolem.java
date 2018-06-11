@@ -21,7 +21,7 @@ public class InventorySiliconGolem extends InventoryPlayer {
     }
 
     @Override
-    public boolean isUseableByPlayer(EntityPlayer player) {
-        return player.getDistanceSqToEntity(siliconGolem) <= 64.0D;
+    public boolean isUsableByPlayer(EntityPlayer player) {
+        return player.getDistanceSq(siliconGolem) <= 64.0D;
     }
 }

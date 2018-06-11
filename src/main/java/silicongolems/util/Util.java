@@ -38,7 +38,7 @@ public class Util {
 
     public static void nbtToInv(NBTTagList nbt, IInventory inv){
         for(int i = 0; i < inv.getSizeInventory(); i++)
-            inv.setInventorySlotContents(i, ItemStack.loadItemStackFromNBT(nbt.getCompoundTagAt(i)));
+            inv.setInventorySlotContents(i, new ItemStack(nbt.getCompoundTagAt(i)));
     }
 
     public static String removeUnprintable(String str){

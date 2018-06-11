@@ -41,8 +41,8 @@ public abstract class MessageComputer implements IMessage{
         @Override
         public IMessage onMessage(T message, MessageContext ctx) {
             if(ctx.side == Side.SERVER){
-                EntityPlayer player = ctx.getServerHandler().playerEntity;
-                Computer computer = Computers.getOrCreate(message.computerID, player.worldObj);
+                EntityPlayer player = ctx.getServerHandler().player;
+                Computer computer = Computers.getOrCreate(message.computerID, player.world);
                 if(!message.validateMessage(computer, player))
                 {
                     System.out.println("Invalid message from player " + player.getName() + ".");
@@ -58,9 +58,9 @@ public abstract class MessageComputer implements IMessage{
 
         @SideOnly(Side.CLIENT)
         public void onMessageClient(T message, MessageContext ctx){
-            EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+            EntityPlayer player = Minecraft.getMinecraft().player;
             Minecraft.getMinecraft().addScheduledTask(() -> {
-                Computer computer = Computers.getOrCreate(message.computerID, player.worldObj);
+                Computer computer = Computers.getOrCreate(message.computerID, player.world);
                 doClient(message, ctx, computer);
             });
         }

@@ -45,7 +45,7 @@ public class MessageHeading implements IMessage {
         @Override
         public IMessage onMessage(MessageHeading message, MessageContext ctx) {
             Minecraft.getMinecraft().addScheduledTask(() -> {
-                EntityLivingBase entity = (EntityLivingBase) Minecraft.getMinecraft().theWorld.getEntityByID(message.entityId);
+                EntityLivingBase entity = (EntityLivingBase) Minecraft.getMinecraft().world.getEntityByID(message.entityId);
                 entity.rotationYaw = message.yaw;
                 entity.rotationPitch = message.pitch;
                 entity.rotationYawHead = message.headYaw;

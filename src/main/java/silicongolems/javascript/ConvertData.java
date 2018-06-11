@@ -20,7 +20,7 @@ public class ConvertData {
         map.put("id", Item.getIdFromItem(item));
         map.put("meta", stack.getMetadata());
 
-        map.put("stackSize", stack.stackSize);
+        map.put("stackSize", stack.getCount());
         map.put("maxStackSize", stack.getMaxStackSize());
 
         map.put("damage", stack.getItemDamage());

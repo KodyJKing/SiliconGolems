@@ -57,26 +57,30 @@ public class EntitySiliconGolem extends EntityLiving {
 
     //region Primary
     @Override
-    protected boolean processInteract(EntityPlayer player, EnumHand hand, @Nullable ItemStack stack) {
-        if(worldObj.isRemote)
+    protected boolean processInteract(EntityPlayer player, EnumHand hand) {
+        if(world.isRemote)
             return true;
+
+        ItemStack stack = player.getHeldItem(hand);
 
         if(!player.isSneaking() && computer.canOpen(player)){
             computer.user = (EntityPlayerMP) player;
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
         } else if(player.isSneaking()){
             ModGuiHandler.activeGolemID = this.getEntityId();
-            player.openGui(SiliconGolems.instance, 1, worldObj, (int) player.posX, (int) player.posY, (int) player.posZ);
+            player.openGui(SiliconGolems.instance, 1, world, (int) player.posX, (int) player.posY, (int) player.posZ);
         }
 
         return true;
     }
 
+
+
     @Override
     public void onDeath(DamageSource cause) {
         super.onDeath(cause);
 
-        if(worldObj.isRemote)
+        if(world.isRemote)
             return;
 
         computer.killProcess();
@@ -84,7 +88,7 @@ public class EntitySiliconGolem extends EntityLiving {
         ItemStack drop = new ItemStack(ModItems.siliconGolem, 1);
         drop.setTagCompound(writeToNBT(new NBTTagCompound()));
 
-        InventoryHelper.spawnItemStack(worldObj, posX, posY, posZ, drop);
+        InventoryHelper.spawnItemStack(world, posX, posY, posZ, drop);
     }
 
     @Override
@@ -99,7 +103,7 @@ public class EntitySiliconGolem extends EntityLiving {
 
         renderYawOffset = rotationYaw;
 
-        if(!worldObj.isRemote){
+        if(!world.isRemote){
             computer.updateComputer();
             if(rotationDirty){
                 ModPacketHandler.INSTANCE.sendToAllAround(new MessageHeading(this), new NetworkRegistry.TargetPoint(dimension, posX, posY, posZ, 100));
@@ -115,7 +119,7 @@ public class EntitySiliconGolem extends EntityLiving {
     }
 
     public FakePlayer getFakePlayer(){
-        WorldServer server = getServer().worldServerForDimension(dimension);
+        WorldServer server = getServer().getWorld(dimension);
         fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
         fakePlayer.inventory = inventory;
         inventory.player = fakePlayer;
@@ -200,25 +204,24 @@ public class EntitySiliconGolem extends EntityLiving {
             super.setLocationAndAngles(x, y, z, yaw, pitch);
     }
 
-    @Override
-    public void setAngles(float yaw, float pitch) {
-        if(isRotationLocked())
-            super.setAngles(rotationYaw, rotationPitch);
-        else
-            super.setAngles(yaw, pitch);
-    }
+    // TODO: Find 1.12.2 equivalent.
+//    @Override
+//    public void setAngles(float yaw, float pitch) {
+//        if(isRotationLocked())
+//            super.setAngles(rotationYaw, rotationPitch);
+//        else
+//            super.setAngles(yaw, pitch);
+//    }
 
     public boolean isRotationLocked() {
-        return !worldObj.isRemote && rotationLocked;
+        return !world.isRemote && rotationLocked;
     }
     //endregion
 
     //region Sounds
     @Nullable
     @Override
-    protected SoundEvent getHurtSound() {
-        return SoundEvents.ENTITY_IRONGOLEM_HURT;
-    }
+    protected SoundEvent getHurtSound(DamageSource damageSourceIn) { return SoundEvents.ENTITY_IRONGOLEM_HURT; }
 
     @Nullable
     @Override

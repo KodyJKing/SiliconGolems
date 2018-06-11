@@ -36,7 +36,7 @@ public class ModGuiHandler implements IGuiHandler {
     }
 
     public Object golemInvGui(EntityPlayer player, boolean serverSide){
-        EntitySiliconGolem golem = (EntitySiliconGolem) player.worldObj.getEntityByID(activeGolemID);
+        EntitySiliconGolem golem = (EntitySiliconGolem) player.world.getEntityByID(activeGolemID);
 
         if(serverSide)
             return new ContainerChest(player.inventory, golem.inventory, player);

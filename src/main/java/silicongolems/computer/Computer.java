@@ -318,6 +318,6 @@ public class Computer {
 
     public void openComputerGui(EntityPlayer player){
         ModGuiHandler.activeComputer = this;
-        player.openGui(SiliconGolems.instance, 0, player.worldObj, 0, 0, 0);
+        player.openGui(SiliconGolems.instance, 0, player.world, 0, 0, 0);
     }
 }

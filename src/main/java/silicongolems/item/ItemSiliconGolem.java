@@ -17,9 +17,11 @@ public class ItemSiliconGolem extends ItemBase {
     }
 
     @Override
-    public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         if(world.isRemote)
             return EnumActionResult.SUCCESS;
+
+        ItemStack stack = player.getHeldItem(hand);
 
         EntitySiliconGolem golem = new EntitySiliconGolem(world);
         BlockPos loc = pos.offset(facing);
@@ -34,7 +36,7 @@ public class ItemSiliconGolem extends ItemBase {
 
         golem.setHealth(2);
 
-        world.spawnEntityInWorld(golem);
+        world.spawnEntity(golem);
 
         player.inventory.deleteStack(stack);
         return EnumActionResult.SUCCESS;
