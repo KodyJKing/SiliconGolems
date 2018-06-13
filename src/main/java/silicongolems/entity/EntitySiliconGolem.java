@@ -67,8 +67,7 @@ public class EntitySiliconGolem extends EntityLiving {
             computer.user = (EntityPlayerMP) player;
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
         } else if(player.isSneaking()){
-            ModGuiHandler.activeGolemID = this.getEntityId();
-            player.openGui(SiliconGolems.instance, 1, world, (int) player.posX, (int) player.posY, (int) player.posZ);
+            player.openGui(SiliconGolems.instance, 1, world, getEntityId(), (int) player.posY, (int) player.posZ);
         }
 
         return true;

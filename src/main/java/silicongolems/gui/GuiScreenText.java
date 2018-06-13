@@ -50,17 +50,7 @@ public class GuiScreenText extends GuiScreen {
         return cornerX() + getBoarderWidth();
     }
 
-    public int textCornerY(){
-        return cornerY() + getBoarderWidth() ; //+ getCharHeight() / 2;
-    }
-
-//    public int cellX(int textX){
-//        return textCornerX() + textX * getCharWidth();
-//    }
-//
-//    public int cellY(int textY){
-//        return textCornerY() + textY * getCharHeight();
-//    }
+    public int textCornerY() { return cornerY() + getBoarderWidth(); }
 
     public int cellX(int textX){
         return textX * charWidth * invTextScale;
@@ -101,6 +91,8 @@ public class GuiScreenText extends GuiScreen {
             System.out.println("Texture manager reference is null!");
             return;
         }
+
+        this.drawDefaultBackground();
 
         GlStateManager.color(1, 1, 1, 1);
         mc.getTextureManager().bindTexture(textGuiTextures);

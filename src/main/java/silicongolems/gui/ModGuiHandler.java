@@ -13,7 +13,6 @@ import silicongolems.gui.window.WindowEditor;
 public class ModGuiHandler implements IGuiHandler {
 
     public static Computer activeComputer;
-    public static int activeGolemID;
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -30,12 +29,12 @@ public class ModGuiHandler implements IGuiHandler {
             return new GuiScreenOS(activeComputer);
 
         if(ID == 1)
-            return golemInvGui(player, serverSide);
+            return golemInvGui(player, serverSide, pos.getX());
 
         return null;
     }
 
-    public Object golemInvGui(EntityPlayer player, boolean serverSide){
+    public Object golemInvGui(EntityPlayer player, boolean serverSide, int activeGolemID){
         EntitySiliconGolem golem = (EntitySiliconGolem) player.world.getEntityByID(activeGolemID);
 
         if(serverSide)
