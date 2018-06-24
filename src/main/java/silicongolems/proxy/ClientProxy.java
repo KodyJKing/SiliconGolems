@@ -19,18 +19,18 @@ import silicongolems.renderer.RenderSiliconGolem;
 
 public class ClientProxy extends CommonProxy {
 
-    public void registerItemRenderer(Item item, int meta, String name){
+    public void registerItemRenderer(Item item, int meta, String name) {
         ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(SiliconGolems.modId + ":" + name, "inventory"));
     }
 
-    public void ignoreProperty(Block block, IProperty property){
+    public void ignoreProperty(Block block, IProperty property) {
         ModelLoader.setCustomStateMapper(block, (new StateMap.Builder()).ignore(property).build());
     }
 
     public void registerEntityRendering() {
         RenderingRegistry.registerEntityRenderingHandler(EntitySiliconGolem.class, new IRenderFactory<EntitySiliconGolem>() {
             @Override
-            public Render<? super EntitySiliconGolem> createRenderFor(RenderManager manager) {
+            public Render<? super EntitySiliconGolem> createRenderFor (RenderManager manager) {
                 return new RenderSiliconGolem(manager);
             }
         });

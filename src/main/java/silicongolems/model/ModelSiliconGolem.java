@@ -113,7 +113,7 @@ public class ModelSiliconGolem extends ModelBase {
         return (Math.abs(x % waveLength - waveLength * 0.5F) - waveLength * 0.25F) / (waveLength * 0.25F);
     }
 
-    private float sineWave(float x, float waveLength){
+    private float sineWave(float x, float waveLength) {
         float recip = (float) (2 * Math.PI / waveLength);
         return (float) Math.cos(x*recip);
     }

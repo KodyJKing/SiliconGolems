@@ -25,19 +25,19 @@ public class ModGuiHandler implements IGuiHandler {
     }
 
     public Object getGuiElement(int ID, EntityPlayer player, World world, BlockPos pos, boolean serverSide) {
-        if(ID == 0 && !serverSide)
+        if (ID == 0 && !serverSide)
             return new GuiScreenOS(activeComputer);
 
-        if(ID == 1)
+        if (ID == 1)
             return golemInvGui(player, serverSide, pos.getX());
 
         return null;
     }
 
-    public Object golemInvGui(EntityPlayer player, boolean serverSide, int activeGolemID){
+    public Object golemInvGui(EntityPlayer player, boolean serverSide, int activeGolemID) {
         EntitySiliconGolem golem = (EntitySiliconGolem) player.world.getEntityByID(activeGolemID);
 
-        if(serverSide)
+        if (serverSide)
             return new ContainerChest(player.inventory, golem.inventory, player);
         else
             return new GuiChest(player.inventory, golem.inventory);

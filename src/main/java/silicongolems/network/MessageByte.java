@@ -5,7 +5,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import silicongolems.computer.Computer;
-import silicongolems.computer.Computers;
 
 public class MessageByte extends MessageComputer{
 
@@ -15,9 +14,9 @@ public class MessageByte extends MessageComputer{
 
     byte msg;
 
-    public MessageByte(){}
+    public MessageByte() {}
 
-    public MessageByte(Computer computer, byte msg){
+    public MessageByte(Computer computer, byte msg) {
         super(computer);
         this.msg = msg;
     }
@@ -34,10 +33,17 @@ public class MessageByte extends MessageComputer{
         buf.writeByte(msg);
     }
 
+    @Override
+    public boolean validateMessage(Computer computer, EntityPlayer player) {
+        if (msg == CLOSE_COMPUTER)
+            return true;
+        return super.validateMessage(computer, player);
+    }
+
     public static class Handler extends MessageComputer.Handler<MessageByte> {
         @Override
         public void doServer(MessageByte message, MessageContext ctx, Computer computer) {
-            switch (message.msg){
+            switch (message.msg) {
                 case TERMINATE:
                     computer.killProcess();
                     return;
@@ -48,7 +54,7 @@ public class MessageByte extends MessageComputer{
 
         @Override
         public void doClient(MessageByte message, MessageContext ctx, Computer computer) {
-            switch (message.msg){
+            switch (message.msg) {
                 case CLEAR_SCREEN:
                     computer.terminalOutput.clear();
                     return;

@@ -17,26 +17,26 @@ import java.util.List;
 
 public class FakePlayerUtil {
 
-    public static void rightClick(FakePlayer fp, EntityLivingBase actual, ItemStack stack){
+    public static void rightClick(FakePlayer fp, EntityLivingBase actual, ItemStack stack) {
         RayTraceResult mouseover = getMouseover(actual, 5);
-        if(mouseover != null && mouseover.typeOfHit != RayTraceResult.Type.MISS){
+        if (mouseover != null && mouseover.typeOfHit != RayTraceResult.Type.MISS) {
 
             EnumActionResult result = EnumActionResult.PASS;
 
-            if(mouseover.typeOfHit == RayTraceResult.Type.ENTITY && mouseover.entityHit instanceof EntityLivingBase){
+            if (mouseover.typeOfHit == RayTraceResult.Type.ENTITY && mouseover.entityHit instanceof EntityLivingBase) {
                 result = fp.interactOn(mouseover.entityHit, EnumHand.MAIN_HAND);
-            } else if(stack != null){
+            } else if (stack != null) {
                 Vec3d hit = mouseover.hitVec;
                 result = stack.onItemUse(
                         fp, actual.world, mouseover.getBlockPos(), EnumHand.MAIN_HAND, mouseover.sideHit,
                         (float) hit.x, (float) hit.y, (float) hit.z);
             }
 
-            if(result != EnumActionResult.PASS)
+            if (result != EnumActionResult.PASS)
                 return;
         }
 
-        if(stack != null)
+        if (stack != null)
             stack.useItemRightClick(actual.world, fp, EnumHand.MAIN_HAND);
     }
 
@@ -44,23 +44,23 @@ public class FakePlayerUtil {
 
     }
 
-        public static RayTraceResult getMouseover(EntityLivingBase entity, double range){
+        public static RayTraceResult getMouseover(EntityLivingBase entity, double range) {
         Vec3d eye = new Vec3d(entity.posX, entity.posY + (double)entity.getEyeHeight(), entity.posZ);
 
         RayTraceResult blocks = traceBlocks(entity, range);
         RayTraceResult entities = traceEntities(entity, range);
 
-        if(blocks == null || blocks.typeOfHit == RayTraceResult.Type.MISS)
+        if (blocks == null || blocks.typeOfHit == RayTraceResult.Type.MISS)
             return entities;
-        if(entities == null || entities.typeOfHit == RayTraceResult.Type.MISS)
+        if (entities == null || entities.typeOfHit == RayTraceResult.Type.MISS)
             return blocks;
 
-        if(blocks.hitVec.squareDistanceTo(eye) < entities.hitVec.squareDistanceTo(eye))
+        if (blocks.hitVec.squareDistanceTo(eye) < entities.hitVec.squareDistanceTo(eye))
             return blocks;
         return entities;
     }
 
-    public static RayTraceResult traceBlocks(Entity entity, double range){
+    public static RayTraceResult traceBlocks(Entity entity, double range) {
         Vec3d eye = new Vec3d(entity.posX, entity.posY + (double)entity.getEyeHeight(), entity.posZ);
         Vec3d look = entity.getLookVec();
         Vec3d end = eye.add(look.scale(range));
@@ -68,7 +68,7 @@ public class FakePlayerUtil {
     }
 
 
-    public static RayTraceResult traceEntities(Entity entity, double range){
+    public static RayTraceResult traceEntities(Entity entity, double range) {
         Vec3d look = entity.getLookVec();
         Vec3d eye = new Vec3d(entity.posX, entity.posY + (double)entity.getEyeHeight(), entity.posZ);
         Vec3d end = eye.add(look.scale(range));
@@ -86,17 +86,17 @@ public class FakePlayerUtil {
 
         RayTraceResult closest = null;
         double closeDistSq = Double.MAX_VALUE;
-        for(Entity other: list){
+        for (Entity other: list) {
 
-            if(other.getEntityBoundingBox().contains(eye))
+            if (other.getEntityBoundingBox().contains(eye))
                 return new RayTraceResult(other);
 
             RayTraceResult hit = other.getEntityBoundingBox().calculateIntercept(eye, end);
-            if(hit == null)
+            if (hit == null)
                 continue;
 
             double distSq = hit.hitVec.squareDistanceTo(eye);
-            if(distSq < closeDistSq && distSq < range * range){
+            if (distSq < closeDistSq && distSq < range * range) {
                 closeDistSq = distSq;
                 closest = hit;
                 hit.typeOfHit = RayTraceResult.Type.ENTITY;

@@ -8,8 +8,8 @@ import javax.script.*;
 public class Scripting {
     //static ScriptEngine engine;
 
-    public static ScriptEngine getEngine(){
-//        if(engine != null)
+    public static ScriptEngine getEngine() {
+//        if (engine != null)
 //            return engine;
         ScriptEngine engine;
 
@@ -25,15 +25,15 @@ public class Scripting {
         return engine;
     }
 
-    public static String run(String script, Bindings bindings){
+    public static String run(String script, Bindings bindings) {
         try {
             ScriptEngine engine = getEngine();
-            if(bindings != null)
+            if (bindings != null)
                 engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(bindings);
             
             engine.eval(script);
 
-        } catch (ScriptException e){
+        } catch (ScriptException e) {
             //System.out.println("There was an issue running the script:\n" + script);
             //System.out.println(e.getMessage());
             return e.getMessage();
@@ -41,17 +41,17 @@ public class Scripting {
         return null;
     }
 
-    public static String run(String script){
+    public static String run(String script) {
         return run(script, null);
     }
 
-    public static JSThread runInNewThread(final String script, final Bindings bindings){
+    public static JSThread runInNewThread(final String script, final Bindings bindings) {
         JSThread thread = new JSThread(script, bindings);
         thread.start();
         return thread;
     }
 
-    public static JSThread runInNewThread(String script){
+    public static JSThread runInNewThread(String script) {
         return runInNewThread(script, null);
     }
 }

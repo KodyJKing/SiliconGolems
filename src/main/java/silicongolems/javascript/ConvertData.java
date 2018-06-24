@@ -33,7 +33,7 @@ public class ConvertData {
         return map;
     }
 
-    public static HashMap<String, Object> blockData(World world, BlockPos pos){
+    public static HashMap<String, Object> blockData(World world, BlockPos pos) {
         HashMap<String, Object> map = new HashMap<String, Object>();
 
         IBlockState state = world.getBlockState(pos);
@@ -49,7 +49,7 @@ public class ConvertData {
         map.put("name", block.getUnlocalizedName());
         map.put("modId", block.getRegistryName().getResourceDomain());
 
-        for(IProperty property: state.getProperties().keySet())
+        for (IProperty property: state.getProperties().keySet())
             map.put(property.getName(), state.getValue(property));
 
         return map;

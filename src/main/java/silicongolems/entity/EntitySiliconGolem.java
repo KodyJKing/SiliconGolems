@@ -49,7 +49,7 @@ public class EntitySiliconGolem extends EntityLiving {
         super(world);
         this.setSize(1.4F * 0.5F, 1);
         inventory = new InventorySiliconGolem(this);
-        if(!world.isRemote){
+        if (!world.isRemote) {
             computer = Computers.add(new Computer(world));
             computer.entity = this;
         }
@@ -58,15 +58,15 @@ public class EntitySiliconGolem extends EntityLiving {
     //region Primary
     @Override
     protected boolean processInteract(EntityPlayer player, EnumHand hand) {
-        if(world.isRemote)
+        if (world.isRemote)
             return true;
 
         ItemStack stack = player.getHeldItem(hand);
 
-        if(!player.isSneaking() && computer.canOpen(player)){
+        if (!player.isSneaking() && computer.canOpen(player)) {
             computer.user = (EntityPlayerMP) player;
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
-        } else if(player.isSneaking()){
+        } else if (player.isSneaking()) {
             player.openGui(SiliconGolems.instance, 1, world, getEntityId(), (int) player.posY, (int) player.posZ);
         }
 
@@ -79,7 +79,7 @@ public class EntitySiliconGolem extends EntityLiving {
     public void onDeath(DamageSource cause) {
         super.onDeath(cause);
 
-        if(world.isRemote)
+        if (world.isRemote)
             return;
 
         computer.killProcess();
@@ -102,9 +102,9 @@ public class EntitySiliconGolem extends EntityLiving {
 
         renderYawOffset = rotationYaw;
 
-        if(!world.isRemote){
+        if (!world.isRemote) {
             computer.updateComputer();
-            if(rotationDirty){
+            if (rotationDirty) {
                 ModPacketHandler.INSTANCE.sendToAllAround(new MessageHeading(this), new NetworkRegistry.TargetPoint(dimension, posX, posY, posZ, 100));
                 rotationDirty = false;
             }
@@ -117,7 +117,7 @@ public class EntitySiliconGolem extends EntityLiving {
         this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(2);
     }
 
-    public FakePlayer getFakePlayer(){
+    public FakePlayer getFakePlayer() {
         WorldServer server = getServer().getWorld(dimension);
         fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
         fakePlayer.inventory = inventory;
@@ -174,7 +174,7 @@ public class EntitySiliconGolem extends EntityLiving {
     //region Rotation Locking
     @Override
     public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
-        if(isRotationLocked())
+        if (isRotationLocked())
             super.setPositionAndRotationDirect(x, y, z, rotationYaw, rotationPitch, newPosRotationIncrements, teleport);
         else
             super.setPositionAndRotationDirect(x, y, z, yaw, pitch, posRotationIncrements, teleport);
@@ -182,14 +182,14 @@ public class EntitySiliconGolem extends EntityLiving {
 
     @Override
     protected void setRotation(float yaw, float pitch) {
-        if(isRotationLocked())
+        if (isRotationLocked())
             return;
         super.setRotation(yaw, pitch);
     }
 
     @Override
     public void setPositionAndRotation(double x, double y, double z, float yaw, float pitch) {
-        if(isRotationLocked())
+        if (isRotationLocked())
             super.setPositionAndRotation(x, y, z, rotationYaw, rotationPitch);
         else
             super.setPositionAndRotation(x, y, z, yaw, pitch);
@@ -197,20 +197,11 @@ public class EntitySiliconGolem extends EntityLiving {
 
     @Override
     public void setLocationAndAngles(double x, double y, double z, float yaw, float pitch) {
-        if(isRotationLocked())
+        if (isRotationLocked())
             super.setLocationAndAngles(x, y, z, rotationYaw, rotationPitch);
         else
             super.setLocationAndAngles(x, y, z, yaw, pitch);
     }
-
-    // TODO: Find 1.12.2 equivalent.
-//    @Override
-//    public void setAngles(float yaw, float pitch) {
-//        if(isRotationLocked())
-//            super.setAngles(rotationYaw, rotationPitch);
-//        else
-//            super.setAngles(yaw, pitch);
-//    }
 
     public boolean isRotationLocked() {
         return !world.isRemote && rotationLocked;

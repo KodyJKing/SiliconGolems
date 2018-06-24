@@ -18,7 +18,7 @@ public class ItemSiliconGolem extends ItemBase {
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if(world.isRemote)
+        if (world.isRemote)
             return EnumActionResult.SUCCESS;
 
         ItemStack stack = player.getHeldItem(hand);
@@ -31,7 +31,7 @@ public class ItemSiliconGolem extends ItemBase {
         golem.rotationYaw = golem.rotationYawHead;
         golem.rotationDirty = true;
 
-        if(stack.hasTagCompound())
+        if (stack.hasTagCompound())
             golem.readEntityFromNBT(stack.getTagCompound());
 
         golem.setHealth(2);

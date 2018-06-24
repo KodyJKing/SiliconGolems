@@ -15,7 +15,7 @@ public class WindowEditor extends Window {
     public TextEditor editor;
     public String path;
 
-    public WindowEditor(Computer computer, GuiScreenOS gui, String path, String text){
+    public WindowEditor(Computer computer, GuiScreenOS gui, String path, String text) {
         super(computer, gui);
         scrollX = 0;
         scrollY = 0;
@@ -37,24 +37,24 @@ public class WindowEditor extends Window {
 
         int x, y;
         y = scrollY;
-        while(y < editor.lines.size() && y - scrollY < getTextHeight()){
+        while (y < editor.lines.size() && y - scrollY < getTextHeight()) {
             StringBuilder line = editor.getLine(y);
             x = scrollX;
-            while(x < line.length() && x - scrollX < getTextWidth()){
+            while (x < line.length() && x - scrollX < getTextWidth()) {
                 char c = line.charAt(x);
-                if(ChatAllowedCharacters.isAllowedCharacter(c))
+                if (ChatAllowedCharacters.isAllowedCharacter(c))
                     drawChar(x - scrollX, y - scrollY, c, TextFormatting.GREEN);
                 x++;
             }
             y++;
         }
 
-        if(Util.blink(1000, 500))
+        if (Util.blink(1000, 500))
             drawChar(editor.cursorX - scrollX, editor.cursorY - scrollY, '_', TextFormatting.DARK_GREEN);
     }
 
     //Keep the cursor in view.
-    public void clampScroll(){
+    public void clampScroll() {
         scrollX = Util.clamp(editor.cursorX - getTextWidth() + 1, editor.cursorX, scrollX);
         scrollY = Util.clamp(editor.cursorY - getTextHeight() + 1, editor.cursorY, scrollY);
     }
@@ -81,7 +81,7 @@ public class WindowEditor extends Window {
 
     @Override
     public void onSideArrow(int dir, boolean ctrl) {
-        if(ctrl)
+        if (ctrl)
             editor.ctrlMove(dir);
         else
             editor.moveCursorX(dir);
@@ -91,7 +91,7 @@ public class WindowEditor extends Window {
 
     @Override
     public void onBackspace(boolean ctrl) {
-        if(ctrl)
+        if (ctrl)
             editor.ctrlBackspace();
         else
             editor.backspace();

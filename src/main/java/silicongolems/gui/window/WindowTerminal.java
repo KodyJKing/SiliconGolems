@@ -20,7 +20,7 @@ public class WindowTerminal extends Window {
     Stack<String> output;
     TextEditor input;
 
-    public WindowTerminal(Computer computer, GuiScreenOS gui){
+    public WindowTerminal(Computer computer, GuiScreenOS gui) {
         super(computer, gui);
         cmdHistory = new Stack<String>();
         output = computer.terminalOutput;
@@ -35,12 +35,12 @@ public class WindowTerminal extends Window {
         drawInput();
     }
 
-    public void drawOutput(){
+    public void drawOutput() {
         int y = 0;
-        while(y < output.size() && y < getTextHeight() - 1){
+        while (y < output.size() && y < getTextHeight() - 1) {
             String line = output.get(y);
             int x = 0;
-            while(x < line.length() && x < getTextWidth()){
+            while (x < line.length() && x < getTextWidth()) {
                 drawChar(x, y, line.charAt(x), TextFormatting.DARK_GREEN);
                 x++;
             }
@@ -48,20 +48,20 @@ public class WindowTerminal extends Window {
         }
     }
 
-    public void drawInput(){
-        if(scrollX == 0)
+    public void drawInput() {
+        if (scrollX == 0)
             drawChar(0, getTextHeight() - 1, '>', TextFormatting.GREEN);
 
         int x = scrollX == 0 ? 0 : scrollX - 1;
 
         StringBuilder line = input.getLine(0);
-        while(x < line.length() && x + 1 - scrollX < getTextWidth()){
+        while (x < line.length() && x + 1 - scrollX < getTextWidth()) {
             drawChar(x + 1 - scrollX, getTextHeight() - 1, line.charAt(x), TextFormatting.GREEN);
             x++;
         }
 
         int cursorX = 1 + input.cursorX - scrollX;
-        if(cursorX < getTextWidth() && Util.blink(1000, 500))
+        if (cursorX < getTextWidth() && Util.blink(1000, 500))
             drawChar(cursorX, getTextHeight() - 1, '_', TextFormatting.DARK_GREEN);
     }
 
@@ -80,11 +80,11 @@ public class WindowTerminal extends Window {
     public void onVertArrow(int dir) {
         int lastInd = cmdIndex;
         cmdIndex = Util.clamp(0, cmdHistory.size(), cmdIndex + dir);
-        if(lastInd == cmdIndex)
+        if (lastInd == cmdIndex)
             return;
 
         input.clear();
-        if(cmdIndex < cmdHistory.size() && cmdIndex >= 0)
+        if (cmdIndex < cmdHistory.size() && cmdIndex >= 0)
             input.type(cmdHistory.get(cmdIndex));
 
         clampScroll();
@@ -92,7 +92,7 @@ public class WindowTerminal extends Window {
 
     @Override
     public void onSideArrow(int dir, boolean ctrl) {
-        if(ctrl)
+        if (ctrl)
             input.ctrlMove(dir);
         else
             input.moveCursorX(dir);
@@ -101,7 +101,7 @@ public class WindowTerminal extends Window {
 
     @Override
     public void onBackspace(boolean ctrl) {
-        if(ctrl)
+        if (ctrl)
             input.ctrlBackspace();
         else
             input.backspace();
@@ -122,7 +122,7 @@ public class WindowTerminal extends Window {
     }
 
     //Keep the cursor in view.
-    public void clampScroll(){
+    public void clampScroll() {
         //This statement is odd on purpose, there is an extra +1 because of the '>' character in the input field.
         //Compare to WindowEditor.clampScroll().
         scrollX = Util.clamp(input.cursorX + 1 + 1 - getTextWidth(), input.cursorX, scrollX);

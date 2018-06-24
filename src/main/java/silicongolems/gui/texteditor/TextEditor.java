@@ -13,39 +13,39 @@ public class TextEditor {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder result = new StringBuilder();
         int lineNum = 0;
-        for(StringBuilder line : lines){
-            if(lineNum++ > 0)
+        for (StringBuilder line : lines) {
+            if (lineNum++ > 0)
                 result.append("\n");
             result.append(line);
         }
         return result.toString();
     }
 
-    public void clear(){
+    public void clear() {
         cursorX = 0;
         cursorY = 0;
 
-        if(lines != null)
+        if (lines != null)
             lines.clear();
         else
             lines = new DualStackList<StringBuilder>();
         lines.add(new StringBuilder());
     }
 
-    public StringBuilder getLine(){
+    public StringBuilder getLine() {
         return lines.get(cursorY);
     }
 
-    public StringBuilder getLine(int i){
+    public StringBuilder getLine(int i) {
         return lines.get(i);
     }
 
     //region typing
     public void type(String str) {
-        if(str.length() == 1 && ChatAllowedCharacters.isAllowedCharacter(str.charAt(0))){
+        if (str.length() == 1 && ChatAllowedCharacters.isAllowedCharacter(str.charAt(0))) {
             getLine().insert(cursorX, str);
             cursorX++;
         } else {
@@ -53,11 +53,11 @@ public class TextEditor {
         }
     }
 
-    public void typeLines(String str){
+    public void typeLines(String str) {
         int lineNum = 0;
-        for(String substr : str.split("\n", -1)) {
+        for (String substr : str.split("\n", -1)) {
             substr = Util.removeUnprintable(substr);
-            if(lineNum++ > 0)
+            if (lineNum++ > 0)
                 newline(false);
             getLine().insert(cursorX, substr);
             cursorX += substr.length();
@@ -66,7 +66,7 @@ public class TextEditor {
     //endregion
 
     //region newline
-    public void newline(boolean isEditing){
+    public void newline(boolean isEditing) {
         int indent = isEditing ? getIndent() : 0;
         boolean makeBlock = isEditing ? shouldMakeBlock() : false;
 
@@ -74,12 +74,12 @@ public class TextEditor {
         cursorY++;
         cursorX = 0;
 
-        if(!isEditing)
+        if (!isEditing)
             return;
 
         doIndent(indent);
 
-        if(makeBlock){
+        if (makeBlock) {
             int oldx = cursorX;
             int oldy = cursorY;
             newline(false);
@@ -90,35 +90,35 @@ public class TextEditor {
         }
     }
 
-    public void splitLine(){
+    public void splitLine() {
         StringBuilder line = getLine();
         String newLine = line.substring(cursorX);
         line.replace(cursorX, line.length(), "");
         lines.add(cursorY + 1, new StringBuilder(newLine));
     }
 
-    public int getIndent(){
+    public int getIndent() {
         boolean curly = safeGetChar(cursorX -1) == '{';
         int indent = getIndent(cursorY);
-        if(safeGetChar(cursorX -1) == '{')
+        if (safeGetChar(cursorX -1) == '{')
             indent += 4;
         return indent;
     }
 
-    public int getIndent(int linenum){
+    public int getIndent(int linenum) {
         String line = getLine(linenum).toString();
         int i = 0;
-        for(; i < line.length() && line.charAt(i) == ' '; i++);
+        for (; i < line.length() && line.charAt(i) == ' '; i++);
         return i;
     }
 
-    public void doIndent(int indent){
-        for(int i = 0; i < indent; i++) type(" ");
+    public void doIndent(int indent) {
+        for (int i = 0; i < indent; i++) type(" ");
     }
 
-    public boolean shouldMakeBlock(){
+    public boolean shouldMakeBlock() {
         boolean curly = safeGetChar(cursorX -1) == '{';
-        if(cursorY + 1 >= lines.size())
+        if (cursorY + 1 >= lines.size())
             return curly;
         else
             return curly && getIndent(cursorY) >= getIndent(cursorY + 1);
@@ -126,8 +126,8 @@ public class TextEditor {
     //endregion
 
     //region backspace
-    public void backspace(){
-        if(cursorX > 0){
+    public void backspace() {
+        if (cursorX > 0) {
             getLine().deleteCharAt(cursorX - 1);
             cursorX--;
         } else {
@@ -135,8 +135,8 @@ public class TextEditor {
         }
     }
 
-    public void mergeLines(){
-        if(cursorY <= 0)
+    public void mergeLines() {
+        if (cursorY <= 0)
             return;
 
         StringBuilder lowerLine = lines.remove(cursorY);
@@ -149,12 +149,12 @@ public class TextEditor {
     //endregion
 
     //region ctrl-actions
-    public void ctrlBackspace(){
+    public void ctrlBackspace() {
         int stop = ctrlSkip(-1);
-        if(stop == cursorX - 1)
+        if (stop == cursorX - 1)
             backspace();
         else{
-            if(stop < 0)
+            if (stop < 0)
                 stop = 0;
             getLine().replace(stop, cursorX, "");
             cursorX = stop;
@@ -163,7 +163,7 @@ public class TextEditor {
 
     public void ctrlMove(int dir) {
         int stop = ctrlSkip(dir);
-        if (stop == cursorX + dir){
+        if (stop == cursorX + dir) {
             moveCursorX(dir);
         } else {
             cursorX = ctrlSkip(dir);
@@ -174,7 +174,7 @@ public class TextEditor {
     /**
      * Finds new position for cursor after performing ctrl-arrow or ctrl-backspace.
      */
-    public int ctrlSkip(int dir){
+    public int ctrlSkip(int dir) {
         int currX = cursorX;
         int lookAhead = dir < 0 ? dir : 0;
 
@@ -184,26 +184,26 @@ public class TextEditor {
         whitespace = Character.isWhitespace(currChar);
         identifier = Character.isJavaIdentifierPart(currChar);
 
-        if(!whitespace && !identifier)
+        if (!whitespace && !identifier)
             return currX + dir;
 
-        while(inLine(currX) || currX == getLine().length()){
+        while (inLine(currX) || currX == getLine().length()) {
             currChar = safeGetChar(currX + lookAhead);
 
-            if(whitespace){
+            if (whitespace) {
 
-                if(Character.isWhitespace(currChar))
+                if (Character.isWhitespace(currChar))
                     currX += dir;
-                else if(Character.isJavaIdentifierPart(currChar)){
+                else if (Character.isJavaIdentifierPart(currChar)) {
                     identifier = true;
                     whitespace = false;
                     currX += dir;
                 } else
                     return currX;
 
-            } else if(identifier){
+            } else if (identifier) {
 
-                if(Character.isJavaIdentifierPart(currChar))
+                if (Character.isJavaIdentifierPart(currChar))
                     currX += dir;
                 else
                     return currX;
@@ -215,19 +215,19 @@ public class TextEditor {
     //endregion
 
     //region cursor logic
-    public void moveCursorX(int amount){
-        if(cursorX == 0 && amount < 0){
+    public void moveCursorX(int amount) {
+        if (cursorX == 0 && amount < 0) {
             int oldY = cursorY;
             cursorY--;
             clampY();
-            if(cursorY != oldY)
+            if (cursorY != oldY)
                 cursorX = getLine().length();
 
-        } else if(cursorX == getLine().length() && amount > 0){
+        } else if (cursorX == getLine().length() && amount > 0) {
             int oldY = cursorY;
             cursorY++;
             clampY();
-            if(cursorY != oldY)
+            if (cursorY != oldY)
                 cursorX = 0;
         } else {
             cursorX += amount;
@@ -236,32 +236,32 @@ public class TextEditor {
 
     }
 
-    public void moveCursorY(int amount){
+    public void moveCursorY(int amount) {
         cursorY += amount;
         clampY();
     }
 
-    public void clampX(){
+    public void clampX() {
         cursorX = Util.clamp(0, getLine().length(), cursorX);
     }
 
-    public void clampY(){
+    public void clampY() {
         cursorY = Util.clamp(0, lines.size() - 1, cursorY);
         clampX();
     }
     //endregion
 
-    public boolean inLine(int x){
+    public boolean inLine(int x) {
         return inLine(x, cursorY);
     }
-    public boolean inLine(int x, int y){
+    public boolean inLine(int x, int y) {
         return x >= 0 && x < getLine(y).length();
     }
 
-    public char safeGetChar(int x){
+    public char safeGetChar(int x) {
         return safeGetChar(x, cursorY);
     }
-    public char safeGetChar(int x, int y){
+    public char safeGetChar(int x, int y) {
         return inLine(x) ? getLine(y).charAt(x) : '\0';
     }
 }

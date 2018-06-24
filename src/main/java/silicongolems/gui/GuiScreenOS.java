@@ -13,7 +13,7 @@ public class GuiScreenOS extends GuiScreenText {
     public Window terminal, editor;
     Computer computer;
 
-    public GuiScreenOS(Computer computer){
+    public GuiScreenOS(Computer computer) {
         terminal = new WindowTerminal(computer, this);
         this.computer = computer;
     }

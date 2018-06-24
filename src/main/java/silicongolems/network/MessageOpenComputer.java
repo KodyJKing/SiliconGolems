@@ -14,9 +14,9 @@ public class MessageOpenComputer extends MessageComputer {
 
     Stack<String> output;
 
-    public MessageOpenComputer(){}
+    public MessageOpenComputer() {}
 
-    public MessageOpenComputer(Computer computer){
+    public MessageOpenComputer(Computer computer) {
         super(computer);
         output = computer.terminalOutput;
     }
@@ -27,7 +27,7 @@ public class MessageOpenComputer extends MessageComputer {
 
         output = new Stack<String>();
         int size = buf.readInt();
-        for(int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++)
             output.add(ByteBufUtils.readUTF8String(buf));
     }
 
@@ -36,7 +36,7 @@ public class MessageOpenComputer extends MessageComputer {
         super.toBytes(buf);
 
         buf.writeInt(output.size());
-        for(String line : output)
+        for (String line : output)
             ByteBufUtils.writeUTF8String(buf, line);
     }
 

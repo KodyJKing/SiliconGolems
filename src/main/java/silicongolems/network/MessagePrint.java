@@ -8,9 +8,9 @@ import silicongolems.computer.Computer;
 public class MessagePrint extends MessageComputer{
     String line;
 
-    public MessagePrint(){}
+    public MessagePrint() {}
 
-    public MessagePrint(Computer computer, String line){
+    public MessagePrint(Computer computer, String line) {
         super(computer);
         this.line = line;
     }

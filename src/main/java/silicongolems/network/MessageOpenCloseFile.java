@@ -14,7 +14,7 @@ public class MessageOpenCloseFile extends MessageComputer {
 
     String path, text;
 
-    public MessageOpenCloseFile(){}
+    public MessageOpenCloseFile() {}
 
     public MessageOpenCloseFile(Computer computer, String path, String text) {
         super(computer);

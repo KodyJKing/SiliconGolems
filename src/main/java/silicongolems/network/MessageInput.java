@@ -9,9 +9,9 @@ public class MessageInput extends MessageComputer {
     
     String command;
 
-    public MessageInput(){}
+    public MessageInput() {}
 
-    public MessageInput(Computer computer, String command){
+    public MessageInput(Computer computer, String command) {
         super(computer);
         this.command = command;
     }

@@ -24,57 +24,57 @@ public class DualStackList<T>  implements Iterable<T>{
         back = new Stack<T>();
     }
 
-    public void clear(){
+    public void clear() {
         front.clear();
         back.clear();
     }
 
-    public void add(int index, T value){
+    public void add(int index, T value) {
         seek(index);
         front.push(value);
     }
 
-    public void add(T value){
+    public void add(T value) {
         add(size(), value);
     }
 
-    public T get(int index){
-        if(index < front.size())
+    public T get(int index) {
+        if (index < front.size())
             return front.get(index);
         else
             return back.get(back.size() + front.size() - 1 - index);
     }
 
-    public T remove(int index){
+    public T remove(int index) {
         seek(index);
         return back.pop();
     }
 
-    public void seek(int index){
-        if(!isValidIndex(index))
+    public void seek(int index) {
+        if (!isValidIndex(index))
             throw new IndexOutOfBoundsException();
-        while(front.size() != index){
+        while (front.size() != index) {
             int dir = (int) Math.signum(index - front.size());
-            if(dir < 0)
+            if (dir < 0)
                 seekLeft();
             else
                 seekRight();
         }
     }
 
-    public void seekLeft(){
+    public void seekLeft() {
         back.push(front.pop());
     }
 
-    public void seekRight(){
+    public void seekRight() {
         front.push(back.pop());
     }
 
-    public int size(){
+    public int size() {
         return front.size() + back.size();
     }
 
-    public boolean isValidIndex(int i){
+    public boolean isValidIndex(int i) {
         return i >= 0 && i <= size();
     }
 

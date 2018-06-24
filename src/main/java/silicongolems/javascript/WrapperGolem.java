@@ -23,21 +23,21 @@ public class WrapperGolem {
     private Computer computer;
     private boolean autoSnap = true;
 
-    public WrapperGolem(EntitySiliconGolem golem){
+    public WrapperGolem(EntitySiliconGolem golem) {
         this.golem = golem;
         computer = golem.computer;
     }
 
-    public void grid(boolean val){
+    public void grid(boolean val) {
         autoSnap = val;
     }
 
-    public void turn(float angle){
+    public void turn(float angle) {
 
         computer.addJob(() -> {
             golem.rotationYawHead += angle;
             golem.rotationYaw = golem.rotationYawHead;
-            if(autoSnap) {
+            if (autoSnap) {
                 snap();
                 align();
             }
@@ -48,7 +48,7 @@ public class WrapperGolem {
         computer.awaitUpdate(0);
     }
 
-    public boolean move(){
+    public boolean move() {
         int oldx = (int) golem.posX;
         int oldz = (int) golem.posZ;
 
@@ -58,7 +58,7 @@ public class WrapperGolem {
         computer.addJob(() -> {
 //            golem.moveEntity(dx, 0, dz);
             golem.move(MoverType.SELF, dx, 0, dz);
-            if(autoSnap) {
+            if (autoSnap) {
                 snap();
                 align();
             }});
@@ -69,10 +69,10 @@ public class WrapperGolem {
 
     }
 
-    public boolean jump(){
+    public boolean jump() {
         int oldy = (int) golem.posY;
 
-        if(!golem.onGround)
+        if (!golem.onGround)
             return false;
         golem.motionY = 0.42;
         computer.awaitUpdate(250);
@@ -80,11 +80,11 @@ public class WrapperGolem {
         return ((int) golem.posY) != oldy;
     }
 
-    public void snap(){
+    public void snap() {
         computer.addJob(() -> {golem.setPosition(Math.floor(golem.posX) + 0.5,  golem.posY, Math.floor(golem.posZ) + 0.5);});
     }
 
-    public void align(){
+    public void align() {
         computer.addJob(() -> {
             golem.rotationYawHead = Math.round(golem.rotationYawHead / 90) * 90;
             golem.rotationYaw = golem.rotationYawHead;
@@ -92,17 +92,17 @@ public class WrapperGolem {
         });
     }
 
-    public boolean build(int index, int forward, int up, int right){
+    public boolean build(int index, int forward, int up, int right) {
         BlockPos pos = relPos(forward, up, right);
 
-        if(!golem.world.isAirBlock(pos))
+        if (!golem.world.isAirBlock(pos))
             return false;
 
         ItemStack stack = golem.inventory.getStackInSlot(index);
-        if(stack == null)
+        if (stack == null)
             return false;
         Block block = Block.getBlockFromItem(stack.getItem());
-        if(block == null)
+        if (block == null)
             return false;
 
         FakePlayer fp = golem.getFakePlayer();
@@ -117,9 +117,9 @@ public class WrapperGolem {
 
         return true;
     }
-    public boolean build(int index){ return build(index, 1, 0, 0);}
+    public boolean build(int index) { return build(index, 1, 0, 0);}
 
-    public void use(int index, int forward, int up, int right){
+    public void use(int index, int forward, int up, int right) {
         EnumFacing dir = up == 0 ? golem.getHorizontalFacing().getOpposite() : (up == -1 ? EnumFacing.UP : EnumFacing.DOWN);
 
         BlockPos pos = relPos(forward, up, right);
@@ -134,15 +134,15 @@ public class WrapperGolem {
                     pos.getX(), pos.getY(), pos.getZ());
 
             stack = golem.inventory.getStackInSlot(index);
-            if(stack != null && stack.getCount() == 0)
+            if (stack != null && stack.getCount() == 0)
                 golem.inventory.setInventorySlotContents(index, ItemStack.EMPTY);
         });
         computer.awaitUpdate(125);
     }
 
-    public void use(int index){use(index, 1, 0, 0);}
+    public void use(int index) {use(index, 1, 0, 0);}
 
-    public void click(int index, float pitch){
+    public void click(int index, float pitch) {
         golem.rotationPitch = pitch;
         FakePlayer fp = golem.getFakePlayer();
 
@@ -153,28 +153,28 @@ public class WrapperGolem {
             FakePlayerUtil.rightClick(fp, golem, stack);
 
             stack = golem.inventory.getStackInSlot(index);
-            if(stack != ItemStack.EMPTY && stack.getCount() == 0)
+            if (stack != ItemStack.EMPTY && stack.getCount() == 0)
                 golem.inventory.setInventorySlotContents(index, ItemStack.EMPTY);
         });
         computer.awaitUpdate(125);
     }
-    public void click(int index){click(index, 0);}
+    public void click(int index) {click(index, 0);}
 
-//    public boolean dig(int forward, int up, int right, boolean drop){
+//    public boolean dig(int forward, int up, int right, boolean drop) {
 //        BlockPos pos = relPos(forward, up, right);
 //
-//        if(golem.worldObj.isAirBlock(pos))
+//        if (golem.worldObj.isAirBlock(pos))
 //            return false;
 //
 //        computer.addJob(() -> {
 //            IBlockState state = golem.worldObj.getBlockState(pos);
 //            golem.worldObj.destroyBlock(pos, drop);
 //
-//            if(!drop){
+//            if (!drop) {
 //                List<ItemStack> drops = state.getBlock().getDrops(golem.worldObj, pos, state, 0);
-//                for(ItemStack stack: drops){
+//                for (ItemStack stack: drops) {
 //                    ItemStack remainder = golem.inventory.addItem(stack);
-//                    if(remainder != null && remainder.stackSize > 0)
+//                    if (remainder != null && remainder.stackSize > 0)
 //                        Block.spawnAsEntity(golem.worldObj, pos, remainder);
 //                }
 //            }
@@ -184,40 +184,40 @@ public class WrapperGolem {
 //        return true;
 //    }
 //    public void dig(int forward, int up, int right) {dig(forward, up, right, false);}
-//    public void dig(){dig(1, 0, 0, false);}
+//    public void dig() {dig(1, 0, 0, false);}
 
-//    public void suck(){
+//    public void suck() {
 //        computer.addJob(() -> {
 //            BlockPos pos = new BlockPos(golem);
 //            List<EntityItem> items = golem.worldObj.getEntitiesWithinAABB(EntityItem.class, new AxisAlignedBB(pos, pos.add(1, 1, 1)).expandXyz(1));
-//            for(EntityItem item: items){
+//            for (EntityItem item: items) {
 //                ItemStack remainder = golem.inventory.addItem(item.getEntityItem());
 //                item.setEntityItemStack(remainder);
-//                if(remainder == null || remainder.stackSize == 0)
+//                if (remainder == null || remainder.stackSize == 0)
 //                    item.setDead();
 //            }});
 //        computer.awaitUpdate(62);
 //    }
 
-    public Object scanStack(int i){
+    public Object scanStack(int i) {
         ItemStack stack = golem.inventory.getStackInSlot(i);
         return stack == ItemStack.EMPTY ? null : ConvertData.itemData(stack);
     }
 
-    public Object scan(int forward, int up, int right){
+    public Object scan(int forward, int up, int right) {
         BlockPos pos = relPos(forward, up, right);
 
         return ConvertData.blockData(golem.world, pos);
     }
 
-    public Object scan(){return scan(1, 0, 0);}
+    public Object scan() {return scan(1, 0, 0);}
 
     @Override
     public String toString() {
         return "golem" + Integer.toString(golem.getEntityId());
     }
 
-    private BlockPos relPos(int forward, int up, int right){
+    private BlockPos relPos(int forward, int up, int right) {
         right = Util.clamp(-1, 1, right);
         up = Util.clamp(-1, 1, up);
         forward = Util.clamp(-1, 1, forward);

@@ -9,7 +9,7 @@ public class Window {
     public Computer computer;
     public GuiScreenOS gui;
 
-    public Window(Computer computer, GuiScreenOS gui){
+    public Window(Computer computer, GuiScreenOS gui) {
         this.computer = computer;
         this.gui = gui;
     }
@@ -74,15 +74,15 @@ public class Window {
         return gui.getCharHeight();
     }
 
-    public boolean onEscape(){return false;}
-    public void onEnter(){}
-    public void onVertArrow(int dir){}
-    public void onSideArrow(int dir, boolean ctrl){}
-    public void onBackspace(boolean ctrl){}
-    public void onType(String string){}
-    public void onClickCell(int x, int y, int button){}
+    public boolean onEscape() {return false;}
+    public void onEnter() {}
+    public void onVertArrow(int dir) {}
+    public void onSideArrow(int dir, boolean ctrl) {}
+    public void onBackspace(boolean ctrl) {}
+    public void onType(String string) {}
+    public void onClickCell(int x, int y, int button) {}
     public void onOpenWindow() {}
     public void onCloseWindow() {}
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {}
-    public void onCtrlT(){}
+    public void onCtrlT() {}
 }

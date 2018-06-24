@@ -9,7 +9,7 @@ public class ModPacketHandler {
 
     public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(SiliconGolems.modId);
 
-    public static void registerPackets(){
+    public static void registerPackets() {
         int id = 0;
 
         INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.CLIENT);
