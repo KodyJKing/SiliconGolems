@@ -67,26 +67,14 @@ public class Computer {
 
     //region NBT
     public NBTTagCompound writeNBT(NBTTagCompound nbt) {
-        NBTTagCompound filesNbt = new NBTTagCompound();
-        for (Map.Entry<String, String> entry: files.entrySet())
-            filesNbt.setString(entry.getKey(), entry.getValue());
-        nbt.setTag("files", filesNbt);
-
-        NBTTagList terminalNbt = new NBTTagList();
-        for (String line : terminalOutput)
-            terminalNbt.appendTag(new NBTTagString(line));
-        nbt.setTag("terminalOutput", terminalNbt);
+        nbt.setString("files", Util.gson.toJson(files));
+        nbt.setString("terminalOutput", Util.gson.toJson(terminalOutput));
         return nbt;
     }
 
     public void readNBT(NBTTagCompound nbt) {
-        NBTTagCompound filesNbt = nbt.getCompoundTag("files");
-        for (String key: filesNbt.getKeySet())
-            files.put(key, filesNbt.getString(key));
-
-        NBTTagList terminalNbt = nbt.getTagList("terminalOutput", 8);
-        for (int i = 0; i < terminalNbt.tagCount(); i++)
-            terminalOutput.push(terminalNbt.getStringTagAt(i));
+        files = Util.gson.fromJson(nbt.getString("files"), files.getClass());
+        terminalOutput = Util.gson.fromJson(nbt.getString("terminalOutput"), terminalOutput.getClass());
     }
     //endregion
 
