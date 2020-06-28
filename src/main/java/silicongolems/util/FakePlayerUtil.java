@@ -27,9 +27,8 @@ public class FakePlayerUtil {
                 result = fp.interactOn(mouseover.entityHit, EnumHand.MAIN_HAND);
             } else if (stack != null) {
                 Vec3d hit = mouseover.hitVec;
-                result = stack.onItemUse(
-                        fp, actual.world, mouseover.getBlockPos(), EnumHand.MAIN_HAND, mouseover.sideHit,
-                        (float) hit.x, (float) hit.y, (float) hit.z);
+                result = stack.onItemUse(fp, actual.world, mouseover.getBlockPos(), EnumHand.MAIN_HAND,
+                        mouseover.sideHit, (float) hit.x, (float) hit.y, (float) hit.z);
             }
 
             if (result != EnumActionResult.PASS)
@@ -44,8 +43,8 @@ public class FakePlayerUtil {
 
     }
 
-        public static RayTraceResult getMouseover(EntityLivingBase entity, double range) {
-        Vec3d eye = new Vec3d(entity.posX, entity.posY + (double)entity.getEyeHeight(), entity.posZ);
+    public static RayTraceResult getMouseover(EntityLivingBase entity, double range) {
+        Vec3d eye = new Vec3d(entity.posX, entity.posY + (double) entity.getEyeHeight(), entity.posZ);
 
         RayTraceResult blocks = traceBlocks(entity, range);
         RayTraceResult entities = traceEntities(entity, range);
@@ -61,32 +60,30 @@ public class FakePlayerUtil {
     }
 
     public static RayTraceResult traceBlocks(Entity entity, double range) {
-        Vec3d eye = new Vec3d(entity.posX, entity.posY + (double)entity.getEyeHeight(), entity.posZ);
+        Vec3d eye = new Vec3d(entity.posX, entity.posY + (double) entity.getEyeHeight(), entity.posZ);
         Vec3d look = entity.getLookVec();
         Vec3d end = eye.add(look.scale(range));
         return entity.world.rayTraceBlocks(eye, end, false, false, true);
     }
 
-
     public static RayTraceResult traceEntities(Entity entity, double range) {
         Vec3d look = entity.getLookVec();
-        Vec3d eye = new Vec3d(entity.posX, entity.posY + (double)entity.getEyeHeight(), entity.posZ);
+        Vec3d eye = new Vec3d(entity.posX, entity.posY + (double) entity.getEyeHeight(), entity.posZ);
         Vec3d end = eye.add(look.scale(range));
 
-        List<Entity> list = entity.world.getEntitiesInAABBexcluding(
-                entity,
-                entity.getEntityBoundingBox().expand(look.x * range, look.y * range, look.z * range).grow(1.0D, 1.0D, 1.0D),
-                Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>()
-        {
-            public boolean apply(@Nullable Entity other)
-            {
-                return other != null && other.canBeCollidedWith();
-            }
-        }));
+        List<Entity> list = entity.world
+                .getEntitiesInAABBexcluding(
+                        entity, entity.getEntityBoundingBox().expand(look.x * range, look.y * range, look.z * range)
+                                .grow(1.0D, 1.0D, 1.0D),
+                        Predicates.and(EntitySelectors.NOT_SPECTATING, new Predicate<Entity>() {
+                            public boolean apply(@Nullable Entity other) {
+                                return other != null && other.canBeCollidedWith();
+                            }
+                        }));
 
         RayTraceResult closest = null;
         double closeDistSq = Double.MAX_VALUE;
-        for (Entity other: list) {
+        for (Entity other : list) {
 
             if (other.getEntityBoundingBox().contains(eye))
                 return new RayTraceResult(other);
