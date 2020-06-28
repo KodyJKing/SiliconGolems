@@ -55,7 +55,7 @@ public class EntitySiliconGolem extends EntityLiving {
         }
     }
 
-    //region Primary
+    // region Primary
     @Override
     protected boolean processInteract(EntityPlayer player, EnumHand hand) {
         if (world.isRemote)
@@ -73,8 +73,6 @@ public class EntitySiliconGolem extends EntityLiving {
         return true;
     }
 
-
-
     @Override
     public void onDeath(DamageSource cause) {
         super.onDeath(cause);
@@ -90,9 +88,17 @@ public class EntitySiliconGolem extends EntityLiving {
         InventoryHelper.spawnItemStack(world, posX, posY, posZ, drop);
     }
 
+    // @Override
+    // protected void despawnEntity() {
+    // super.despawnEntity();
+    // computer.onDestroy();
+    // }
+
     @Override
-    protected void despawnEntity() {
-        super.despawnEntity();
+    public void setDead() {
+        super.setDead();
+        if (world.isRemote)
+            return;
         computer.onDestroy();
     }
 
@@ -105,7 +111,8 @@ public class EntitySiliconGolem extends EntityLiving {
         if (!world.isRemote) {
             computer.updateComputer();
             if (rotationDirty) {
-                ModPacketHandler.INSTANCE.sendToAllAround(new MessageHeading(this), new NetworkRegistry.TargetPoint(dimension, posX, posY, posZ, 100));
+                ModPacketHandler.INSTANCE.sendToAllAround(new MessageHeading(this),
+                        new NetworkRegistry.TargetPoint(dimension, posX, posY, posZ, 100));
                 rotationDirty = false;
             }
         }
@@ -119,7 +126,8 @@ public class EntitySiliconGolem extends EntityLiving {
 
     public FakePlayer getFakePlayer() {
         WorldServer server = getServer().getWorld(dimension);
-        fakePlayer = FakePlayerFactory.get(server, new GameProfile(new UUID(0,0), "SiliconGolem" + Integer.toString(getEntityId())));
+        fakePlayer = FakePlayerFactory.get(server,
+                new GameProfile(new UUID(0, 0), "SiliconGolem" + Integer.toString(getEntityId())));
         fakePlayer.inventory = inventory;
         inventory.player = fakePlayer;
 
@@ -132,14 +140,9 @@ public class EntitySiliconGolem extends EntityLiving {
         return fakePlayer;
     }
 
-    @Override
-    public boolean canBePushed() {
-        return false;
-    }
+    // endregion
 
-    //endregion
-
-    //region NBT
+    // region NBT
     @Override
     public void writeEntityToNBT(NBTTagCompound nbt) {
         super.writeEntityToNBT(nbt);
@@ -158,22 +161,23 @@ public class EntitySiliconGolem extends EntityLiving {
 
         computer.readNBT(nbt);
     }
-    //endregion
+    // endregion
 
-    //region Clear AI
+    // region Clear AI
     @Override
     protected void initEntityAI() {
     }
 
     @Override
     public boolean isAIDisabled() {
-        return true;
+        return false;
     }
-    //endregion
+    // endregion
 
-    //region Rotation Locking
+    // region Movement
     @Override
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch,
+            int posRotationIncrements, boolean teleport) {
         if (isRotationLocked())
             super.setPositionAndRotationDirect(x, y, z, rotationYaw, rotationPitch, newPosRotationIncrements, teleport);
         else
@@ -206,12 +210,29 @@ public class EntitySiliconGolem extends EntityLiving {
     public boolean isRotationLocked() {
         return !world.isRemote && rotationLocked;
     }
-    //endregion
 
-    //region Sounds
+    public void snapToGrid() {
+        this.setPosition(Math.floor(this.posX) + 0.5, this.posY, Math.floor(this.posZ) + 0.5);
+    }
+
+    public void alignToGrid() {
+        this.rotationYawHead = Math.round(this.rotationYawHead / 90) * 90;
+        this.rotationYaw = this.rotationYawHead;
+        this.rotationDirty = true;
+    }
+
+    @Override
+    public boolean canBePushed() {
+        return false;
+    }
+    // endregion
+
+    // region Sounds
     @Nullable
     @Override
-    protected SoundEvent getHurtSound(DamageSource damageSourceIn) { return SoundEvents.ENTITY_IRONGOLEM_HURT; }
+    protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
+        return SoundEvents.ENTITY_IRONGOLEM_HURT;
+    }
 
     @Nullable
     @Override
@@ -220,8 +241,7 @@ public class EntitySiliconGolem extends EntityLiving {
     }
 
     @Override
-    protected void playStepSound(BlockPos pos, Block blockIn)
-    {
+    protected void playStepSound(BlockPos pos, Block blockIn) {
         this.playSound(SoundEvents.ENTITY_IRONGOLEM_STEP, getSoundVolume(), getSoundPitch());
     }
 
@@ -234,8 +254,6 @@ public class EntitySiliconGolem extends EntityLiving {
     protected float getSoundVolume() {
         return 0.5F;
     }
-    //endregion
-
-
+    // endregion
 
 }
