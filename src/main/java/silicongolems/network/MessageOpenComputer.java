@@ -14,7 +14,8 @@ public class MessageOpenComputer extends MessageComputer {
 
     Stack<String> output;
 
-    public MessageOpenComputer() {}
+    public MessageOpenComputer() {
+    }
 
     public MessageOpenComputer(Computer computer) {
         super(computer);
@@ -50,7 +51,8 @@ public class MessageOpenComputer extends MessageComputer {
 
         @Override
         public void doServer(MessageOpenComputer message, MessageContext ctx, Computer computer) {
-            computer.user = null;
+            // TODO: Monitor this change for side effects.
+            // computer.user = null;
         }
     }
 }
