@@ -51,12 +51,12 @@ public class WrapperGolem {
         int oldx = (int) golem.posX;
         int oldz = (int) golem.posZ;
 
-        float dx = -MathHelper.sin(golem.rotationYaw * 0.017453292F); // 0.017453292F = PI / 180, degrees to radians
-        float dz = MathHelper.cos(golem.rotationYaw * 0.017453292F);
+        float degreesToRadians = 0.017453292F; // = PI / 180
+        float dx = -MathHelper.sin(golem.rotationYaw * degreesToRadians);
+        float dz = MathHelper.cos(golem.rotationYaw * degreesToRadians);
 
         computer.addJob(() -> {
-            // golem.moveEntity(dx, 0, dz);
-            golem.move(MoverType.SELF, dx, 0, dz);
+             golem.move(MoverType.SELF, dx, 0, dz);
             if (autoSnap) {
                 snap();
                 align();
