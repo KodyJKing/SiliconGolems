@@ -4,6 +4,7 @@ import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.internal.runtime.Context;
 
 import javax.script.*;
+import java.util.Map;
 
 public class Scripting {
     //static ScriptEngine engine;
@@ -25,7 +26,7 @@ public class Scripting {
         return engine;
     }
 
-    public static String run(String script, Bindings bindings) {
+    public static String run(String script, Map<String, Object> bindings) {
         try {
             ScriptEngine engine = getEngine();
             if (bindings != null)
@@ -45,7 +46,7 @@ public class Scripting {
         return run(script, null);
     }
 
-    public static JSThread runInNewThread(final String script, final Bindings bindings) {
+    public static JSThread runInNewThread(final String script, final Map<String, Object> bindings) {
         JSThread thread = new JSThread(script, bindings);
         thread.start();
         return thread;

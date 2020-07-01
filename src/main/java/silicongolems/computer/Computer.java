@@ -19,8 +19,6 @@ import silicongolems.network.ModPacketHandler;
 import silicongolems.javascript.Scripting;
 import silicongolems.javascript.WrapperGolem;
 
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -164,10 +162,10 @@ public class Computer {
         return  arguments[location];
     }
 
-    public Bindings getBindings() {
-        SimpleBindings bindings = new SimpleBindings();
+    public Map<String, Object> getBindings() {
+        Map<String, Object> bindings = new HashMap<>();
 
-        bindings.put("golem", new WrapperGolem(entity));
+//        bindings.put("golem", new WrapperGolem(entity));
 
         bindings.put("sleep", (Consumer<Integer>) (Integer milis) -> {
             try{
