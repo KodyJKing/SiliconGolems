@@ -162,38 +162,71 @@ public class Computer {
         return  arguments[location];
     }
 
-    public Map<String, Object> getBindings() {
-        Map<String, Object> bindings = new HashMap<>();
+    public Object getBindings() {
+//        Map<String, Object> bindings = new HashMap<>();
 
 //        bindings.put("golem", new WrapperGolem(entity));
+//
+//        bindings.put("sleep", (Consumer<Integer>) (Integer milis) -> {
+//            try{
+//                Thread.sleep(milis);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        });
+//
+//        bindings.put("print", (Consumer<Object>) (Object o) -> {print(o.toString());});
+//
+//        bindings.put("input", (Supplier<String>) () -> {
+//            try {
+//                synchronized (programThread) {
+//                    awaitingInput = true;
+//                    programThread.wait();
+//                    return input;
+//                }
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//            return null;
+//        });
+//
+//        bindings.put("exit", (BooleanSupplier) () -> {
+//            programThread.stop();
+//            return true;
+//        });
 
-        bindings.put("sleep", (Consumer<Integer>) (Integer milis) -> {
-            try{
-                Thread.sleep(milis);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
+        Object bindings = new Object() {
+            public Object golem = new WrapperGolem(entity);
 
-        bindings.put("print", (Consumer<Object>) (Object o) -> {print(o.toString());});
-
-        bindings.put("input", (Supplier<String>) () -> {
-            try {
-                synchronized (programThread) {
-                    awaitingInput = true;
-                    programThread.wait();
-                    return input;
+            public void sleep(int milis) {
+                try{
+                    Thread.sleep(milis);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
-            return null;
-        });
 
-        bindings.put("exit", (BooleanSupplier) () -> {
-            programThread.stop();
-            return true;
-        });
+            public void print(String message) {
+                Computer.this.print(message);
+            }
+
+            public String input() {
+                try {
+                    synchronized (programThread) {
+                        awaitingInput = true;
+                        programThread.wait();
+                        return input;
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            public void exit() {
+                programThread.stop();
+            }
+        };
 
         return bindings;
     }

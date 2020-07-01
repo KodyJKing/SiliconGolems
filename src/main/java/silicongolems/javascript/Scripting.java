@@ -1,53 +1,33 @@
 package silicongolems.javascript;
 
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
-import jdk.nashorn.internal.runtime.Context;
+import com.eclipsesource.v8.V8;
+import com.eclipsesource.v8.V8Object;
+import silicongolems.util.ReflectionUtil;
 
-import javax.script.*;
-import java.util.Map;
+import java.lang.reflect.*;
 
 public class Scripting {
-    //static ScriptEngine engine;
-
-    public static ScriptEngine getEngine() {
-//        if (engine != null)
-//            return engine;
-        ScriptEngine engine;
-
-        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        engine = factory.getScriptEngine(new JSFilter());
-        Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-        bindings.remove("print");
-        bindings.remove("load");
-        bindings.remove("loadWithNewGlobal");
-        bindings.remove("exit");
-        bindings.remove("quit");
-
-        return engine;
-    }
-
-    public static String run(String script, Map<String, Object> bindings) {
+    public static String run(String script, Object bindings) {
         try {
-            ScriptEngine engine = getEngine();
-            if (bindings != null)
-                engine.getBindings(ScriptContext.ENGINE_SCOPE).putAll(bindings);
-            
-            engine.eval(script);
+            V8 runtime = V8.createV8Runtime();
+            addBindings(runtime, runtime, bindings);
+            runtime.executeScript(script);
 
-        } catch (ScriptException e) {
-            //System.out.println("There was an issue running the script:\n" + script);
-            //System.out.println(e.getMessage());
+        } catch (Exception e) {
+            System.out.println("There was an issue running the script:\n" + script);
+            System.out.println(e.getMessage());
             return e.getMessage();
         }
         return null;
     }
 
     public static String run(String script) {
-        return run(script, null);
+        return run("'use strict;'" + script, null);
     }
 
-    public static JSThread runInNewThread(final String script, final Map<String, Object> bindings) {
+    public static JSThread runInNewThread(final String script, final Object bindings) {
         JSThread thread = new JSThread(script, bindings);
+        thread.setName("SiliconGolems_JSThread");
         thread.start();
         return thread;
     }
@@ -55,4 +35,33 @@ public class Scripting {
     public static JSThread runInNewThread(String script) {
         return runInNewThread(script, null);
     }
+
+    private static void addBindings(V8 runtime, V8Object object, Object bindings) {
+        Method[] methods = bindings.getClass().getDeclaredMethods();
+        for (Method method : methods) {
+            if (!ReflectionUtil.isPublic(method)) continue;
+            System.out.println("Registering method: " + method.getName());
+            object.registerJavaMethod(
+                    bindings,
+                    method.getName(),
+                    method.getName(),
+                    method.getParameterTypes());
+        }
+        Field[] fields = bindings.getClass().getDeclaredFields();
+        for (Field field: fields) {
+            String fieldName = field.getName();
+            if (!ReflectionUtil.isPublic(field) || fieldName.contains("this")) continue;
+            try {
+                Object subBindings = ReflectionUtil.forceGet(field, bindings);
+                V8Object subObject = new V8Object(runtime);
+                System.out.println("Adding bindings for field " + fieldName);
+                object.add(field.getName(), subObject);
+                addBindings(runtime, subObject, subBindings);
+                subObject.release();
+            } catch (IllegalAccessException e) {
+                System.out.println("Couldn't add bindings for " + fieldName + " due to access exception.");
+            }
+        }
+    }
+
 }

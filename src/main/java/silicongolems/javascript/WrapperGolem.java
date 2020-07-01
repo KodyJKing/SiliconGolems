@@ -33,7 +33,6 @@ public class WrapperGolem {
     }
 
     public void turn(float angle) {
-
         computer.addJob(() -> {
             golem.rotationYawHead += angle;
             golem.rotationYaw = golem.rotationYawHead;

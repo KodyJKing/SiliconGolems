@@ -1,13 +1,13 @@
 package silicongolems.javascript;
 
-import java.util.Map;
+import com.eclipsesource.v8.V8;
 
 public class JSThread extends Thread {
     String script;
-    Map<String, Object> bindings;
+    Object bindings;
     public String errorMessage;
 
-    public JSThread(String script, Map<String, Object> bindings) {
+    public JSThread(String script, Object bindings) {
         super();
         this.script = script;
         this.bindings = bindings;
