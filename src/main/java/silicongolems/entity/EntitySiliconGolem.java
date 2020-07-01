@@ -40,6 +40,8 @@ public class EntitySiliconGolem extends EntityLiving {
     public boolean rotationDirty = false;
     public int attackTime = 0;
 
+    boolean justSpawned = true;
+
     public Computer computer;
     private FakePlayer fakePlayer;
 
@@ -109,6 +111,10 @@ public class EntitySiliconGolem extends EntityLiving {
         renderYawOffset = rotationYaw;
 
         if (!world.isRemote) {
+            if (justSpawned) {
+                justSpawned = false;
+                computer.runProgram("startup");
+            }
             computer.updateComputer();
             if (rotationDirty) {
                 ModPacketHandler.INSTANCE.sendToAllAround(new MessageHeading(this),
@@ -162,6 +168,7 @@ public class EntitySiliconGolem extends EntityLiving {
         computer.readNBT(nbt);
     }
     // endregion
+
 
     // region Clear AI
     @Override
