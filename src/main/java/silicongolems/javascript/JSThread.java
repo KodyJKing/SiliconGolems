@@ -18,9 +18,11 @@ public class JSThread extends Thread {
     public  boolean isRunning = true;
     public boolean wasTerminated = false;
 
+    static int threadId = 0;
+
     public JSThread(String script, Object bindings) {
         super();
-        setName("SiliconGolems_JSThread");
+        setName("SiliconGolems_JSThread" + threadId++);
         this.script = script;
         this.bindings = bindings;
     }
@@ -55,6 +57,8 @@ public class JSThread extends Thread {
                 errorMessage = matcher.group("rest");
         }
     }
+
+
 
     public static JSThread spawnThread(final String script, final Object bindings) {
         JSThread thread = new JSThread(script, bindings);
