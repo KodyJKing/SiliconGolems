@@ -1,11 +1,16 @@
 package silicongolems.computer;
 
-import com.eclipsesource.v8.V8RuntimeException;
+import com.eclipsesource.v8.V8Array;
+import com.eclipsesource.v8.V8Function;
+import com.eclipsesource.v8.V8Object;
+import com.eclipsesource.v8.utils.V8ObjectUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-import scala.Console;
+import org.lwjgl.Sys;
 import silicongolems.SiliconGolems;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
@@ -162,6 +167,7 @@ public class Computer {
         return arguments[location];
     }
 
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public Object getBindings() {
         Object bindings = new Object() {
             public Object golem = new WrapperGolem(entity);
@@ -171,14 +177,28 @@ public class Computer {
             }
 
             public void print(Object message) {
-                addJob(() -> {
-                    String repr = message == null ? "null" : message.toString();
-                    Computer.this.print(repr);
-                });
+                String repr = null;
+                try {
+                    if (message == null)
+                        repr = null;
+                    else if (message instanceof String)
+                        repr = (String) message;
+                    else if (message instanceof V8Array)
+                        repr = gson.toJson(V8ObjectUtils.toList((V8Array) message));
+                    else if (message instanceof V8Object && !(message instanceof V8Function))
+                        repr = gson.toJson(V8ObjectUtils.toMap((V8Object) message));
+                    else
+                        repr = message.toString();
+                } catch (Exception e) {
+                    System.out.println("Oops! Something went wrong printing this value.");
+                    e.printStackTrace();
+                }
+                String _repr = repr;
+                addJob(() -> Computer.this.print(_repr));
             }
 
             public void log(Object message) {
-                Console.println(message);
+                System.out.println(message);
             }
 
             public String input() throws InterruptedException {
@@ -189,11 +209,6 @@ public class Computer {
                     programThread.wait();
                     return input;
                 }
-                // try {
-                // } catch (InterruptedException e) {
-                // e.printStackTrace();
-                // }
-                // return null;
             }
 
             public void exit() {
@@ -284,15 +299,15 @@ public class Computer {
         return programThread != null && programThread.isRunning && programThread.isAlive();
     }
 
-    public void awaitUpdate(int sleepMilis) {
+    public void awaitUpdate(int sleepMilis) throws InterruptedException {
         synchronized (programThread) {
-            try {
+//            try {
                 if (sleepMilis > 0)
                     Thread.sleep(sleepMilis);
                 programThread.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 
