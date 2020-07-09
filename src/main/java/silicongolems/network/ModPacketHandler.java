@@ -9,22 +9,21 @@ public class ModPacketHandler {
 
     public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(SiliconGolems.modId);
 
+    private static int id;
+    public static void registerPacket(Class clazz, Side side) {
+        INSTANCE.registerMessage(MessageAuto.Handler.class, clazz, id++, side);
+    }
+    public static void registerPacket(Class clazz) {
+        INSTANCE.registerMessage(MessageAuto.Handler.class, clazz, id++, Side.CLIENT);
+        INSTANCE.registerMessage(MessageAuto.Handler.class, clazz, id++, Side.SERVER);
+    }
+
     public static void registerPackets() {
-        int id = 0;
-
-        INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.CLIENT);
-        INSTANCE.registerMessage(MessageOpenCloseFile.Handler.class, MessageOpenCloseFile.class, id++, Side.SERVER);
-
-        INSTANCE.registerMessage(MessageOpenComputer.Handler.class, MessageOpenComputer.class, id++, Side.CLIENT);
-        INSTANCE.registerMessage(MessageOpenComputer.Handler.class, MessageOpenComputer.class, id++, Side.SERVER);
-
-        INSTANCE.registerMessage(MessageInput.Handler.class, MessageInput.class, id++, Side.SERVER);
-
-        INSTANCE.registerMessage(MessagePrint.Handler.class, MessagePrint.class, id++, Side.CLIENT);
-
-        INSTANCE.registerMessage(MessageByte.Handler.class, MessageByte.class, id++, Side.SERVER);
-        INSTANCE.registerMessage(MessageByte.Handler.class, MessageByte.class, id++, Side.CLIENT);
-
+        registerPacket(MessageOpenCloseFile.class);
+        registerPacket(MessageOpenComputer.class);
+        registerPacket(MessageInput.class, Side.SERVER);
+        registerPacket(MessagePrint.class, Side.CLIENT);
+        registerPacket(MessageByte.class);
         INSTANCE.registerMessage(MessageHeading.Handler.class, MessageHeading.class, id++, Side.CLIENT);
     }
 

@@ -72,6 +72,7 @@ public class EntitySiliconGolem extends EntityLiving {
     // region Primary
     @Override
     protected boolean processInteract(EntityPlayer player, EnumHand hand) {
+        System.out.println(SiliconGolems.proxy.side());
         if (world.isRemote)
             return true;
 
