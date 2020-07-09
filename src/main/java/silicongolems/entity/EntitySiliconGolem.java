@@ -58,7 +58,7 @@ public class EntitySiliconGolem extends EntityLiving {
         this.setSize(1.4F * 0.5F, 1);
         inventory = new InventorySiliconGolem(this);
         if (!world.isRemote) {
-            computer = Computers.add(new Computer(world));
+            computer = Computers.add(new Computer(false));
             computer.entity = this;
         }
     }
@@ -75,31 +75,23 @@ public class EntitySiliconGolem extends EntityLiving {
         System.out.println(SiliconGolems.proxy.side());
         if (world.isRemote)
             return true;
-
-        ItemStack stack = player.getHeldItem(hand);
-
         if (!player.isSneaking() && computer.canOpen(player)) {
             computer.user = (EntityPlayerMP) player;
             ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
         } else if (player.isSneaking()) {
             player.openGui(SiliconGolems.instance, 1, world, getEntityId(), (int) player.posY, (int) player.posZ);
         }
-
         return true;
     }
 
     @Override
     public void onDeath(DamageSource cause) {
         super.onDeath(cause);
-
         if (world.isRemote)
             return;
-
         computer.killProcess();
-
         ItemStack drop = new ItemStack(ModItems.siliconGolem, 1);
         drop.setTagCompound(writeToNBT(new NBTTagCompound()));
-
         InventoryHelper.spawnItemStack(world, posX, posY, posZ, drop);
     }
 
@@ -114,9 +106,7 @@ public class EntitySiliconGolem extends EntityLiving {
     @Override
     public void onEntityUpdate() {
         super.onEntityUpdate();
-
         renderYawOffset = rotationYaw;
-
         if (!world.isRemote) {
             if (justSpawned) {
                 justSpawned = false;
@@ -128,7 +118,6 @@ public class EntitySiliconGolem extends EntityLiving {
                 rotationDirty = false;
             }
         }
-
     }
 
     @Override

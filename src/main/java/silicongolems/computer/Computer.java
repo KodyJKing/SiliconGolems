@@ -9,8 +9,6 @@ import com.google.gson.GsonBuilder;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.World;
-import org.lwjgl.Sys;
 import silicongolems.SiliconGolems;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
@@ -42,14 +40,14 @@ public class Computer {
     String input;
 
     public EntityPlayerMP user;
-    public World world;
+    public boolean isRemote;
     public EntitySiliconGolem entity;
 
     public JSThread programThread;
     public String runningProgram;
 
-    public Computer(World world, int computerID) {
-        this.world = world;
+    public Computer(boolean isRemote, int computerID) {
+        this.isRemote = isRemote;
         id = computerID;
         Computers.add(this);
         terminalOutput = new Stack<String>();
@@ -58,8 +56,8 @@ public class Computer {
         BuiltinScripts.addScripts(this);
     }
 
-    public Computer(World world) {
-        this(world, nextID++);
+    public Computer(boolean isRemote) {
+        this(isRemote, nextID++);
     }
 
     // region NBT
@@ -260,7 +258,6 @@ public class Computer {
             user = null;
         }
 
-        // if (programThread != null && !programThread.isAlive()) {
         if (programThread != null && !isRunning() && jobs.isEmpty()) {
             if (programThread.errorMessage == null)
                 print(programThread.wasTerminated ? "Program terminated." : "Program finished.");
@@ -301,13 +298,9 @@ public class Computer {
 
     public void awaitUpdate(int sleepMilis) throws InterruptedException {
         synchronized (programThread) {
-//            try {
                 if (sleepMilis > 0)
                     Thread.sleep(sleepMilis);
                 programThread.wait();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
         }
     }
 
@@ -322,7 +315,6 @@ public class Computer {
             return;
         synchronized (programThread) {
             programThread.stopScript();
-            // print("Terminated program.");
         }
     }
 
