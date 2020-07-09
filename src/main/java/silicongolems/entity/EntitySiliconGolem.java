@@ -11,10 +11,15 @@ import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.network.play.server.SPacketEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
@@ -36,7 +41,6 @@ import java.util.UUID;
 
 public class EntitySiliconGolem extends EntityLiving {
 
-    public boolean rotationLocked = true;
     public boolean rotationDirty = false;
     public int attackTime = 0;
 
@@ -47,6 +51,8 @@ public class EntitySiliconGolem extends EntityLiving {
 
     public InventorySiliconGolem inventory;
 
+    public static final DataParameter<Integer> computerIdParameter = EntityDataManager.createKey(EntitySiliconGolem.class, DataSerializers.VARINT);
+
     public EntitySiliconGolem(World world) {
         super(world);
         this.setSize(1.4F * 0.5F, 1);
@@ -55,6 +61,12 @@ public class EntitySiliconGolem extends EntityLiving {
             computer = Computers.add(new Computer(world));
             computer.entity = this;
         }
+    }
+
+    @Override
+    protected void entityInit() {
+        super.entityInit();
+        this.dataManager.register(computerIdParameter, -1);
     }
 
     // region Primary
@@ -90,12 +102,6 @@ public class EntitySiliconGolem extends EntityLiving {
         InventoryHelper.spawnItemStack(world, posX, posY, posZ, drop);
     }
 
-    // @Override
-    // protected void despawnEntity() {
-    // super.despawnEntity();
-    // computer.onDestroy();
-    // }
-
     @Override
     public void setDead() {
         super.setDead();
@@ -117,11 +123,11 @@ public class EntitySiliconGolem extends EntityLiving {
             }
             computer.updateComputer();
             if (rotationDirty) {
-                ModPacketHandler.INSTANCE.sendToAllAround(new MessageHeading(this),
-                        new NetworkRegistry.TargetPoint(dimension, posX, posY, posZ, 100));
+                ModPacketHandler.INSTANCE.sendToAllTracking(new MessageHeading(this), this);
                 rotationDirty = false;
             }
         }
+
     }
 
     @Override
@@ -146,6 +152,11 @@ public class EntitySiliconGolem extends EntityLiving {
         return fakePlayer;
     }
 
+    @Override
+    protected void initEntityAI() {}
+
+    @Override
+    public boolean isAIDisabled() { return false; }
     // endregion
 
     // region NBT
@@ -169,55 +180,7 @@ public class EntitySiliconGolem extends EntityLiving {
     }
     // endregion
 
-
-    // region Clear AI
-    @Override
-    protected void initEntityAI() {
-    }
-
-    @Override
-    public boolean isAIDisabled() {
-        return false;
-    }
-    // endregion
-
     // region Movement
-    @Override
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch,
-            int posRotationIncrements, boolean teleport) {
-        if (isRotationLocked())
-            super.setPositionAndRotationDirect(x, y, z, rotationYaw, rotationPitch, newPosRotationIncrements, teleport);
-        else
-            super.setPositionAndRotationDirect(x, y, z, yaw, pitch, posRotationIncrements, teleport);
-    }
-
-    @Override
-    protected void setRotation(float yaw, float pitch) {
-        if (isRotationLocked())
-            return;
-        super.setRotation(yaw, pitch);
-    }
-
-    @Override
-    public void setPositionAndRotation(double x, double y, double z, float yaw, float pitch) {
-        if (isRotationLocked())
-            super.setPositionAndRotation(x, y, z, rotationYaw, rotationPitch);
-        else
-            super.setPositionAndRotation(x, y, z, yaw, pitch);
-    }
-
-    @Override
-    public void setLocationAndAngles(double x, double y, double z, float yaw, float pitch) {
-        if (isRotationLocked())
-            super.setLocationAndAngles(x, y, z, rotationYaw, rotationPitch);
-        else
-            super.setLocationAndAngles(x, y, z, yaw, pitch);
-    }
-
-    public boolean isRotationLocked() {
-        return !world.isRemote && rotationLocked;
-    }
-
     public void snapToGrid() {
         this.setPosition(Math.floor(this.posX) + 0.5, this.posY, Math.floor(this.posZ) + 0.5);
     }
