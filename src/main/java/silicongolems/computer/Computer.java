@@ -1,12 +1,16 @@
 package silicongolems.computer;
 
+import com.eclipsesource.v8.V8Array;
+import com.eclipsesource.v8.V8Function;
+import com.eclipsesource.v8.V8Object;
+import com.eclipsesource.v8.utils.V8ObjectUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import org.lwjgl.Sys;
 import silicongolems.SiliconGolems;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
@@ -16,18 +20,11 @@ import silicongolems.network.MessageByte;
 import silicongolems.network.MessageOpenCloseFile;
 import silicongolems.network.MessagePrint;
 import silicongolems.network.ModPacketHandler;
-import silicongolems.javascript.Scripting;
 import silicongolems.javascript.WrapperGolem;
 
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class Computer {
 
@@ -65,7 +62,7 @@ public class Computer {
         this(world, nextID++);
     }
 
-    //region NBT
+    // region NBT
     public NBTTagCompound writeNBT(NBTTagCompound nbt) {
         nbt.setString("files", Util.gson.toJson(files));
         nbt.setString("terminalOutput", Util.gson.toJson(terminalOutput));
@@ -76,9 +73,9 @@ public class Computer {
         files = Util.gson.fromJson(nbt.getString("files"), files.getClass());
         terminalOutput = Util.gson.fromJson(nbt.getString("terminalOutput"), terminalOutput.getClass());
     }
-    //endregion
+    // endregion
 
-    //region Commands and Scripting
+    // region Commands and Scripting
     public void onInput(String input) {
         if (programThread != null && awaitingInput && programThread.getState() == Thread.State.WAITING)
             inputToProgram(input);
@@ -139,13 +136,19 @@ public class Computer {
             }
         }
 
-        if (files.containsKey(commandName)) {
-            programThread = Scripting.runInNewThread(readOrMakeFile(commandName), getBindings());
-            runningProgram = commandName;
+        if (runProgram(commandName))
             return;
-        }
 
         print("That is not a recognized command!");
+    }
+
+    public boolean runProgram(String path) {
+        if (files.containsKey(path)) {
+            programThread = JSThread.spawnThread(readOrMakeFile(path), getBindings());
+            runningProgram = path;
+            return true;
+        }
+        return false;
     }
 
     public boolean checkFile(String path) {
@@ -161,47 +164,63 @@ public class Computer {
             print("Missing " + name + " argument.");
             return null;
         }
-        return  arguments[location];
+        return arguments[location];
     }
 
-    public Bindings getBindings() {
-        SimpleBindings bindings = new SimpleBindings();
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public Object getBindings() {
+        Object bindings = new Object() {
+            public Object golem = new WrapperGolem(entity);
 
-        bindings.put("golem", new WrapperGolem(entity));
-
-        bindings.put("sleep", (Consumer<Integer>) (Integer milis) -> {
-            try{
+            public void sleep(int milis) throws InterruptedException {
                 Thread.sleep(milis);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
-        });
 
-        bindings.put("print", (Consumer<Object>) (Object o) -> {print(o.toString());});
+            public void print(Object message) {
+                String repr = null;
+                try {
+                    if (message == null)
+                        repr = null;
+                    else if (message instanceof String)
+                        repr = (String) message;
+                    else if (message instanceof V8Array)
+                        repr = gson.toJson(V8ObjectUtils.toList((V8Array) message));
+                    else if (message instanceof V8Object && !(message instanceof V8Function))
+                        repr = gson.toJson(V8ObjectUtils.toMap((V8Object) message));
+                    else
+                        repr = message.toString();
+                } catch (Exception e) {
+                    System.out.println("Oops! Something went wrong printing this value.");
+                    e.printStackTrace();
+                }
+                String _repr = repr;
+                addJob(() -> Computer.this.print(_repr));
+            }
 
-        bindings.put("input", (Supplier<String>) () -> {
-            try {
+            public void log(Object message) {
+                System.out.println(message);
+            }
+
+            public String input() throws InterruptedException {
                 synchronized (programThread) {
+                    if (!programThread.isRunning)
+                        throw new Error("Tried to request input while shutting down.");
                     awaitingInput = true;
                     programThread.wait();
                     return input;
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
-            return null;
-        });
 
-        bindings.put("exit", (BooleanSupplier) () -> {
-            programThread.stop();
-            return true;
-        });
+            public void exit() {
+                killProcess();
+            }
+        };
 
         return bindings;
     }
-    //endregion
+    // endregion
 
-    //region State
+    // region State
     public void writeFile(String path, String text) {
         files.put(path, text);
     }
@@ -212,7 +231,7 @@ public class Computer {
         return files.get(path);
     }
 
-    public String readFile(String path) throws Exception{
+    public String readFile(String path) throws Exception {
         if (!files.containsKey(path))
             throw new Exception("File not found!");
         return files.get(path);
@@ -225,32 +244,35 @@ public class Computer {
     }
 
     public void printLocal(String line) {
-        for (String subline: Util.printableLines(line, maxTerminalWidth)) {
+        for (String subline : Util.printableLines(line, maxTerminalWidth)) {
             subline = Util.removeUnprintable(subline);
             terminalOutput.push(subline);
             if (terminalOutput.size() > maxTerminalLines)
                 terminalOutput.remove(0);
         }
     }
-    //endregion
+    // endregion
 
-    //region Logic and Threading
+    // region Logic and Threading
     public void updateComputer() {
         if (user != null && !inRange(user)) {
             ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLOSE_COMPUTER), user);
             user = null;
         }
 
-        if (programThread != null && !programThread.isAlive()) {
+        // if (programThread != null && !programThread.isAlive()) {
+        if (programThread != null && !isRunning() && jobs.isEmpty()) {
             if (programThread.errorMessage == null)
-                print("Program finished.");
+                print(programThread.wasTerminated ? "Program terminated." : "Program finished.");
             else
                 print(programThread.errorMessage.replaceAll("<eval>", "\"" + runningProgram + "\""));
             programThread = null;
         }
 
         if (awaitingUpdate()) {
-            synchronized (programThread) { programThread.notify(); }
+            synchronized (programThread) {
+                programThread.notify();
+            }
         }
 
         synchronized (jobs) {
@@ -260,9 +282,12 @@ public class Computer {
     }
 
     ArrayDeque<Job> jobs = new ArrayDeque<Job>();
+
     public void addJob(Job job) {
-        synchronized (jobs) {
-            jobs.addFirst(job);
+        if (isRunning()) {
+            synchronized (jobs) {
+                jobs.addFirst(job);
+            }
         }
     }
 
@@ -270,12 +295,19 @@ public class Computer {
         return programThread != null && programThread.getState() == Thread.State.WAITING && !awaitingInput;
     }
 
-    public void awaitUpdate(int sleepMilis) {
-        synchronized(programThread) {
-            try{
-                if (sleepMilis > 0) Thread.sleep(sleepMilis);
+    private boolean isRunning() {
+        return programThread != null && programThread.isRunning && programThread.isAlive();
+    }
+
+    public void awaitUpdate(int sleepMilis) throws InterruptedException {
+        synchronized (programThread) {
+//            try {
+                if (sleepMilis > 0)
+                    Thread.sleep(sleepMilis);
                 programThread.wait();
-            } catch (InterruptedException e) {e.printStackTrace();}
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 
@@ -285,9 +317,12 @@ public class Computer {
     }
 
     public void killProcess() {
-        if (programThread != null) {
-            programThread.stop();
-            print("Terminated program.");
+        awaitingInput = false;
+        if (programThread == null)
+            return;
+        synchronized (programThread) {
+            programThread.stopScript();
+            // print("Terminated program.");
         }
     }
 
@@ -303,7 +338,7 @@ public class Computer {
         return entity.getDistanceSq(player.posX, player.posY, player.posZ) < 5 * 5;
     }
 
-    //endregion
+    // endregion
 
     public void openComputerGui(EntityPlayer player) {
         ModGuiHandler.activeComputer = this;

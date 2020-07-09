@@ -1,5 +1,8 @@
 package silicongolems.javascript;
 
+import com.eclipsesource.v8.V8Object;
+import com.eclipsesource.v8.utils.V8ObjectUtils;
+import it.unimi.dsi.fastutil.Hash;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.MoverType;
@@ -10,11 +13,13 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.*;
 import net.minecraftforge.common.util.FakePlayer;
+import org.lwjgl.Sys;
 import silicongolems.util.FakePlayerUtil;
 import silicongolems.util.Util;
 import silicongolems.computer.Computer;
 import silicongolems.entity.EntitySiliconGolem;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class WrapperGolem {
@@ -32,8 +37,7 @@ public class WrapperGolem {
         autoSnap = val;
     }
 
-    public void turn(float angle) {
-
+    public void turn(float angle) throws InterruptedException {
         computer.addJob(() -> {
             golem.rotationYawHead += angle;
             golem.rotationYaw = golem.rotationYawHead;
@@ -47,7 +51,7 @@ public class WrapperGolem {
         computer.awaitUpdate(0);
     }
 
-    public boolean move() {
+    public boolean move() throws InterruptedException {
         int oldx = (int) golem.posX;
         int oldz = (int) golem.posZ;
 
@@ -69,7 +73,7 @@ public class WrapperGolem {
 
     }
 
-    public boolean jump() {
+    public boolean jump() throws InterruptedException {
         int oldy = (int) golem.posY;
 
         if (!golem.onGround)
@@ -92,7 +96,7 @@ public class WrapperGolem {
         });
     }
 
-    public boolean build(int index, int forward, int up, int right) {
+    public boolean build(int index, int forward, int up, int right) throws InterruptedException {
         BlockPos pos = relPos(forward, up, right);
 
         if (!golem.world.isAirBlock(pos))
@@ -116,11 +120,11 @@ public class WrapperGolem {
         return true;
     }
 
-    public boolean build(int index) {
+    public boolean build(int index) throws InterruptedException {
         return build(index, 1, 0, 0);
     }
 
-    public void use(int index, int forward, int up, int right) {
+    public void use(int index, int forward, int up, int right) throws InterruptedException {
         EnumFacing dir = up == 0 ? golem.getHorizontalFacing().getOpposite()
                 : (up == -1 ? EnumFacing.UP : EnumFacing.DOWN);
 
@@ -141,15 +145,14 @@ public class WrapperGolem {
         computer.awaitUpdate(125);
     }
 
-    public void use(int index) {
+    public void  use(int index) throws InterruptedException {
         use(index, 1, 0, 0);
     }
 
-    public void click(int index, float pitch) {
+    public void click(int index, float pitch) throws InterruptedException {
         golem.rotationPitch = pitch;
-        FakePlayer fp = golem.getFakePlayer();
-
         computer.addJob(() -> {
+            FakePlayer fp = golem.getFakePlayer();
             ItemStack stack = golem.inventory.getStackInSlot(index);
 
             fp.inventory.currentItem = index;
@@ -162,7 +165,7 @@ public class WrapperGolem {
         computer.awaitUpdate(125);
     }
 
-    public void click(int index) {
+    public void click(int index) throws InterruptedException {
         click(index, 0);
     }
 
@@ -211,16 +214,16 @@ public class WrapperGolem {
 
     public Object scanStack(int i) {
         ItemStack stack = golem.inventory.getStackInSlot(i);
-        return stack == ItemStack.EMPTY ? null : ConvertData.itemData(stack);
+        return stack == ItemStack.EMPTY ? null : JSThread.createObject(ConvertData.itemData(stack));
     }
 
-    public Object scan(int forward, int up, int right) {
+    public V8Object scan(int forward, int up, int right) {
         BlockPos pos = relPos(forward, up, right);
-
-        return ConvertData.blockData(golem.world, pos);
+        HashMap result = ConvertData.blockData(golem.world, pos);
+        return JSThread.createObject(result);
     }
 
-    public Object scan() {
+    public V8Object scan() {
         return scan(1, 0, 0);
     }
 

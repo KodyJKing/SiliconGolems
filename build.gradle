@@ -55,6 +55,8 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
+    // https://mvnrepository.com/artifact/com.eclipsesource.j2v8/j2v8_win32_x86_64
+    compile group: 'com.eclipsesource.j2v8', name: 'j2v8_win32_x86_64', version: '4.6.0'
 }
 
 processResources {
