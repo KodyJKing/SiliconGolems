@@ -2,7 +2,7 @@ package silicongolems.computer;
 
 import com.eclipsesource.v8.*;
 import com.eclipsesource.v8.utils.V8ObjectUtils;
-import silicongolems.util.V8Utils;
+import silicongolems.util.V8Util;
 
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -45,7 +45,7 @@ public class JSThread extends Thread {
         super.run();
         try {
             runtime = V8.createV8Runtime();
-            V8Utils.addBindings(runtime, runtime, bindings);
+            V8Util.addBindings(runtime, runtime, bindings);
             if (script.startsWith("'no strict'"))
                 runtime.executeScript(script, "program", 0);
             else

@@ -10,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-public class V8Utils {
+public class V8Util {
     public static void addBindings(V8 runtime, V8Object object, Object bindings) {
         // Add all methods from bindings object.
         Method[] methods = bindings.getClass().getDeclaredMethods();
