@@ -4,19 +4,14 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
-import scala.util.control.Exception;
 import silicongolems.gui.ModGuiHandler;
 import silicongolems.network.MessageJSON;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.network.SiliconGolemsMessage;
 import silicongolems.util.SidedIntMaps;
-import silicongolems.util.Util;
-
-import java.util.List;
 
 public class Terminal {
 
@@ -48,10 +43,8 @@ public class Terminal {
         this.isRemote = isRemote;
         this.id = id;
         addInstance(this);
-        if (!isRemote) {
-            this.state.text = new TextBuffer();
-            this.state.text.init();
-        }
+        if (!isRemote)
+            this.state.text = new TextBuffer(width, height).init();
     }
 
     public Terminal(boolean isRemote) {
@@ -97,7 +90,7 @@ public class Terminal {
                 state.scrollY = buf.readInt();
                 state.cursorX = buf.readInt();
                 state.cursorY = buf.readInt();
-                state.text = new TextBuffer();
+                state.text = new TextBuffer(width, height);
                 state.text.fromBytes(buf);
             }
 
@@ -121,8 +114,8 @@ public class Terminal {
         public static class CMPrint extends MessageJSON.Payload {
             int id;
             String text;
-            public  CMPrint() {}
-            public  CMPrint(int id, String text) { this.id = id; this.text = text; }
+            public CMPrint() {}
+            public CMPrint(int id, String text) { this.id = id; this.text = text; }
             public void runClient(MessageContext ctx) {
                 Terminal terminal = getInstance(Side.CLIENT, id);
                 if (terminal == null) return;
@@ -135,55 +128,5 @@ public class Terminal {
             MessageJSON.registerMessage(CMPrint.class);
         }
     // endregion
-
-    public static class TextBuffer {
-        public char[] data = null;
-        public int top = 0;
-
-        public void fromBytes(ByteBuf buf) {
-            top = buf.readInt();
-            String text = ByteBufUtils.readUTF8String(buf);
-            data = text.toCharArray();
-        }
-
-        public void toBytes(ByteBuf buf) {
-            buf.writeInt(top);
-            String text = String.copyValueOf(data);
-            ByteBufUtils.writeUTF8String(buf, text);
-        }
-
-        public void init() {
-            data = new char[width * height];
-        }
-
-        public  void clear() {
-            for (int i = 0; i < data.length; i++)
-                data[i] = '\u0000';
-        }
-
-        public void print(String text) {
-            List<String> lines = Util.printableLines(text, width);
-            for (String line: lines)
-                printLine(line);
-        }
-
-        private void printLine(String text) {
-            int lineInd = lineIndex(top);
-            for (int i = 0; i < text.length(); i++)
-                data[lineInd + i] = text.charAt(i);
-            for (int i = text.length(); i < width; i++)
-                data[lineInd + i] = 0;
-            top = Util.mod(top + 1, height);
-        }
-
-        private int lineIndex(int line) {
-            return line * width;
-        }
-
-        public char charAt(int x, int y) {
-            int i = Util.mod(y + top, height);
-            return data[i * width + x];
-        }
-    }
 
 }
