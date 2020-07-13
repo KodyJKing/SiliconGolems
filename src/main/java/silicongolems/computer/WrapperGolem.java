@@ -1,26 +1,18 @@
-package silicongolems.javascript;
+package silicongolems.computer;
 
 import com.eclipsesource.v8.V8Object;
-import com.eclipsesource.v8.utils.V8ObjectUtils;
-import it.unimi.dsi.fastutil.Hash;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.MoverType;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.*;
 import net.minecraftforge.common.util.FakePlayer;
-import org.lwjgl.Sys;
 import silicongolems.util.FakePlayerUtil;
 import silicongolems.util.Util;
-import silicongolems.computer.Computer;
 import silicongolems.entity.EntitySiliconGolem;
 
 import java.util.HashMap;
-import java.util.List;
 
 public class WrapperGolem {
 

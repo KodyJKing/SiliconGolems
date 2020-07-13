@@ -82,4 +82,10 @@ public class Util {
     public static double roundTo(double val, double round) {
         return Math.round(val / round) * round;
     }
+
+    public static int mod(int dividend, int divisor) {
+        int result = dividend % divisor;
+        if (result < 0) result += divisor;
+        return result;
+    }
 }

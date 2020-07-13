@@ -13,158 +13,37 @@ import silicongolems.SiliconGolems;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
 import silicongolems.gui.ModGuiHandler;
-import silicongolems.javascript.JSThread;
-import silicongolems.network.MessageByte;
-import silicongolems.network.MessageOpenCloseFile;
-import silicongolems.network.MessagePrint;
-import silicongolems.network.ModPacketHandler;
-import silicongolems.javascript.WrapperGolem;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.Stack;
 
 public class Computer {
-
-    private static int nextID;
-    public int id;
-
-    static int maxTerminalLines = 36;
-    static int maxTerminalWidth = 77;
-    public Stack<String> terminalOutput;
-
-    public boolean awaitingInput;
-
     HashMap<String, String> files;
-
-    String input;
-
-    public EntityPlayerMP user;
-    public boolean isRemote;
     public EntitySiliconGolem entity;
-
+    public EntityPlayerMP user;
+    public Terminal terminal;
     public JSThread programThread;
-    public String runningProgram;
+    private boolean justStarted = true;
 
-    public Computer(boolean isRemote, int computerID) {
-        this.isRemote = isRemote;
-        id = computerID;
-        Computers.add(this);
-        terminalOutput = new Stack<String>();
-        files = new HashMap<String, String>();
-
-        BuiltinScripts.addScripts(this);
-    }
-
-    public Computer(boolean isRemote) {
-        this(isRemote, nextID++);
+    public Computer() {
+        files = new HashMap<>();
+        terminal = new Terminal(false);
     }
 
     // region NBT
     public NBTTagCompound writeNBT(NBTTagCompound nbt) {
         nbt.setString("files", Util.gson.toJson(files));
-        nbt.setString("terminalOutput", Util.gson.toJson(terminalOutput));
+//        nbt.setString("terminalOutput", Util.gson.toJson(terminalOutput));
         return nbt;
     }
 
     public void readNBT(NBTTagCompound nbt) {
         files = Util.gson.fromJson(nbt.getString("files"), files.getClass());
-        terminalOutput = Util.gson.fromJson(nbt.getString("terminalOutput"), terminalOutput.getClass());
+//        terminalOutput = Util.gson.fromJson(nbt.getString("terminalOutput"), terminalOutput.getClass());
     }
     // endregion
 
     // region Commands and Scripting
-    public void onInput(String input) {
-        if (programThread != null && awaitingInput && programThread.getState() == Thread.State.WAITING)
-            inputToProgram(input);
-        else if (programThread == null || !programThread.isAlive())
-            parseAndRun(input);
-    }
-
-    public void inputToProgram(String input) {
-        synchronized (programThread) {
-            this.input = input;
-            awaitingInput = false;
-            programThread.notify();
-        }
-    }
-
-    public void parseAndRun(String command) {
-        print(">" + command);
-
-        String[] words = command.split(" ");
-
-        if (words.length < 0)
-            return;
-
-        String commandName = words[0];
-
-        switch (commandName) {
-            case "edit": {
-                String path = getArgument("path", 1, words);
-                if (path == null)
-                    return;
-                ModPacketHandler.INSTANCE.sendTo(new MessageOpenCloseFile(this, path, readOrMakeFile(path)), user);
-                return;
-            }
-            case "rm": {
-                String path = getArgument("path", 1, words);
-                if (path == null)
-                    return;
-                files.remove(path);
-                return;
-            }
-            case "clear": {
-                terminalOutput.clear();
-                ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLEAR_SCREEN), user);
-                return;
-            }
-            case "ls": {
-                for (String key : files.keySet())
-                    print("-" + key);
-                return;
-            }
-            case "cp": {
-                String frompath = getArgument("from", 1, words);
-                String topath = getArgument("to", 2, words);
-                if (frompath == null || topath == null || !checkFile(frompath))
-                    return;
-                writeFile(topath, readOrMakeFile(frompath));
-                return;
-            }
-        }
-
-        if (runProgram(commandName))
-            return;
-
-        print("That is not a recognized command!");
-    }
-
-    public boolean runProgram(String path) {
-        if (files.containsKey(path)) {
-            programThread = JSThread.spawnThread(readOrMakeFile(path), getBindings());
-            runningProgram = path;
-            return true;
-        }
-        return false;
-    }
-
-    public boolean checkFile(String path) {
-        if (!files.containsKey(path)) {
-            print("There is no file named " + path + ".");
-            return false;
-        }
-        return true;
-    }
-
-    public String getArgument(String name, int location, String[] arguments) {
-        if (arguments.length <= location) {
-            print("Missing " + name + " argument.");
-            return null;
-        }
-        return arguments[location];
-    }
-
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public Object getBindings() {
         Object bindings = new Object() {
@@ -192,21 +71,11 @@ public class Computer {
                     e.printStackTrace();
                 }
                 String _repr = repr;
-                addJob(() -> Computer.this.print(_repr));
+                addJob(() -> Computer.this.terminal.print(_repr));
             }
 
             public void log(Object message) {
                 System.out.println(message);
-            }
-
-            public String input() throws InterruptedException {
-                synchronized (programThread) {
-                    if (!programThread.isRunning)
-                        throw new Error("Tried to request input while shutting down.");
-                    awaitingInput = true;
-                    programThread.wait();
-                    return input;
-                }
             }
 
             public void exit() {
@@ -235,41 +104,23 @@ public class Computer {
         return files.get(path);
     }
 
-    public void print(String line) {
-        printLocal(line);
-        if (user != null)
-            ModPacketHandler.INSTANCE.sendTo(new MessagePrint(this, line), user);
-    }
-
-    public void printLocal(String line) {
-        for (String subline : Util.printableLines(line, maxTerminalWidth)) {
-            subline = Util.removeUnprintable(subline);
-            terminalOutput.push(subline);
-            if (terminalOutput.size() > maxTerminalLines)
-                terminalOutput.remove(0);
-        }
-    }
     // endregion
 
     // region Logic and Threading
+
+    public void startScript() {
+        if (programThread != null) programThread.stopScript();
+        String script = "let i = 0; while (true) { sleep(1000); print(i++); }";
+        programThread = JSThread.spawnThread(script, getBindings());
+    }
+
     public void updateComputer() {
-        if (user != null && !inRange(user)) {
-            ModPacketHandler.INSTANCE.sendTo(new MessageByte(this, MessageByte.CLOSE_COMPUTER), user);
+        if (user != null && !inRange(user))
             user = null;
-        }
 
-        if (programThread != null && !isRunning() && jobs.isEmpty()) {
-            if (programThread.errorMessage == null)
-                print(programThread.wasTerminated ? "Program terminated." : "Program finished.");
-            else
-                print(programThread.errorMessage.replaceAll("<eval>", "\"" + runningProgram + "\""));
-            programThread = null;
-        }
-
-        if (awaitingUpdate()) {
-            synchronized (programThread) {
-                programThread.notify();
-            }
+        if (justStarted)  {
+            startScript();
+            justStarted = false;
         }
 
         synchronized (jobs) {
@@ -278,18 +129,14 @@ public class Computer {
         }
     }
 
-    ArrayDeque<Job> jobs = new ArrayDeque<Job>();
+    ArrayDeque<Runnable> jobs = new ArrayDeque<>();
 
-    public void addJob(Job job) {
+    public void addJob(Runnable job) {
         if (isRunning()) {
             synchronized (jobs) {
                 jobs.addFirst(job);
             }
         }
-    }
-
-    private boolean awaitingUpdate() {
-        return programThread != null && programThread.getState() == Thread.State.WAITING && !awaitingInput;
     }
 
     private boolean isRunning() {
@@ -306,11 +153,9 @@ public class Computer {
 
     public void onDestroy() {
         killProcess();
-        Computers.remove(this);
     }
 
     public void killProcess() {
-        awaitingInput = false;
         if (programThread == null)
             return;
         synchronized (programThread) {
@@ -319,11 +164,13 @@ public class Computer {
     }
 
     public boolean canOpen(EntityPlayer player) {
-        return user == null && inRange(player);
+        return true;
+//        return user == null && inRange(player);
     }
 
     public boolean canUse(EntityPlayer player) {
-        return player == user;
+        return true;
+//        return player == user;
     }
 
     public boolean inRange(EntityPlayer player) {

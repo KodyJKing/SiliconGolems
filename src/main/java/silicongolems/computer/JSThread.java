@@ -1,13 +1,9 @@
-package silicongolems.javascript;
+package silicongolems.computer;
 
 import com.eclipsesource.v8.*;
-import com.eclipsesource.v8.utils.MemoryManager;
 import com.eclipsesource.v8.utils.V8ObjectUtils;
-import silicongolems.util.ReflectionUtil;
 import silicongolems.util.V8Utils;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +45,6 @@ public class JSThread extends Thread {
         super.run();
         try {
             runtime = V8.createV8Runtime();
-//            addBindings(runtime, bindings);
             V8Utils.addBindings(runtime, runtime, bindings);
             if (script.startsWith("'no strict'"))
                 runtime.executeScript(script, "program", 0);

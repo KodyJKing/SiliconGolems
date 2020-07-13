@@ -1,5 +1,6 @@
 package silicongolems;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -35,7 +36,6 @@ public class SiliconGolems
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         System.out.println(name + " is loading!");
-
         if ((boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment"))
             devEnv = true;
 
