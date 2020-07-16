@@ -1,9 +1,8 @@
 package silicongolems.util;
 
-import com.eclipsesource.v8.JavaCallback;
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8Object;
+import com.eclipsesource.v8.*;
 import com.eclipsesource.v8.utils.MemoryManager;
+import com.eclipsesource.v8.utils.V8ObjectUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -77,5 +76,22 @@ public class V8Util {
         };
 
         runtime.registerJavaMethod(call, "call");
+    }
+
+    public static String prettyString(Object object) {
+        String repr = "<cannot print>";
+        try {
+            if (object == null)
+                repr = null;
+            else if (object instanceof String)
+                repr = (String) object;
+            else if (object instanceof V8Array)
+                repr = Util.gson.toJson(V8ObjectUtils.toList((V8Array) object));
+            else if (object instanceof V8Object && !(object instanceof V8Function))
+                repr = Util.gson.toJson(V8ObjectUtils.toMap((V8Object) object));
+            else
+                repr = object.toString();
+        } catch (Exception e) { }
+        return repr;
     }
 }

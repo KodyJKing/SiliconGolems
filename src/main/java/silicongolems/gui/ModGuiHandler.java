@@ -2,21 +2,16 @@ package silicongolems.gui;
 
 import net.minecraft.client.gui.inventory.GuiChest;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.ContainerChest;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import silicongolems.SiliconGolems;
-import silicongolems.computer.Computer;
 import silicongolems.computer.Terminal;
 import silicongolems.entity.EntitySiliconGolem;
 
 public class ModGuiHandler implements IGuiHandler {
-
-    public static Computer activeComputer;
-
     private static final int TERMINAL = 0;
     private static final int GOLEM_INVENTORY = 1;
 

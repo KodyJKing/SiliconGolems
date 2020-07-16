@@ -1,18 +1,11 @@
 package silicongolems.computer;
 
-import com.eclipsesource.v8.V8Array;
-import com.eclipsesource.v8.V8Function;
-import com.eclipsesource.v8.V8Object;
-import com.eclipsesource.v8.utils.V8ObjectUtils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import silicongolems.SiliconGolems;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
-import silicongolems.gui.ModGuiHandler;
+import silicongolems.util.V8Util;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -33,45 +26,22 @@ public class Computer {
     // region NBT
     public NBTTagCompound writeNBT(NBTTagCompound nbt) {
         nbt.setString("files", Util.gson.toJson(files));
-//        nbt.setString("terminalOutput", Util.gson.toJson(terminalOutput));
         return nbt;
     }
 
     public void readNBT(NBTTagCompound nbt) {
         files = Util.gson.fromJson(nbt.getString("files"), files.getClass());
-//        terminalOutput = Util.gson.fromJson(nbt.getString("terminalOutput"), terminalOutput.getClass());
     }
     // endregion
 
     // region Commands and Scripting
-    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    public Object getBindings() {
-        Object bindings = new Object() {
-            public Object golem = new WrapperGolem(entity);
+    public Object getAPI() {
+        Object api = new Object() {
+            public Object golem = new GolemAPI(entity);
+            public Object terminal = new TerminalAPI(Computer.this.terminal);
 
             public void sleep(int milis) throws InterruptedException {
                 Thread.sleep(milis);
-            }
-
-            public void print(Object message) {
-                String repr = null;
-                try {
-                    if (message == null)
-                        repr = null;
-                    else if (message instanceof String)
-                        repr = (String) message;
-                    else if (message instanceof V8Array)
-                        repr = gson.toJson(V8ObjectUtils.toList((V8Array) message));
-                    else if (message instanceof V8Object && !(message instanceof V8Function))
-                        repr = gson.toJson(V8ObjectUtils.toMap((V8Object) message));
-                    else
-                        repr = message.toString();
-                } catch (Exception e) {
-                    System.out.println("Oops! Something went wrong printing this value.");
-                    e.printStackTrace();
-                }
-                String _repr = repr;
-                addJob(() -> Computer.this.terminal.print(_repr));
             }
 
             public void log(Object message) {
@@ -83,7 +53,7 @@ public class Computer {
             }
         };
 
-        return bindings;
+        return api;
     }
     // endregion
 
@@ -103,20 +73,22 @@ public class Computer {
             throw new Exception("File not found!");
         return files.get(path);
     }
-
     // endregion
 
     // region Logic and Threading
 
     public void startScript() {
         if (programThread != null) programThread.stopScript();
-        String script = "let i = 0; while (true) { sleep(1000); print(i++); }";
-        programThread = JSThread.spawnThread(script, getBindings());
+        String script = "let i = 0; while (true) { sleep(1000); terminal.setShift(terminal.getShift() - 1); terminal.setLine(0, '' + i++); }";
+        programThread = JSThread.spawnThread(script, getAPI());
     }
 
-    public void updateComputer() {
+    public void update() {
         if (user != null && !inRange(user))
             user = null;
+
+        if (terminal != null)
+            terminal.update();
 
         if (justStarted)  {
             startScript();
@@ -163,24 +135,8 @@ public class Computer {
         }
     }
 
-    public boolean canOpen(EntityPlayer player) {
-        return true;
-//        return user == null && inRange(player);
-    }
-
-    public boolean canUse(EntityPlayer player) {
-        return true;
-//        return player == user;
-    }
-
     public boolean inRange(EntityPlayer player) {
         return entity.getDistanceSq(player.posX, player.posY, player.posZ) < 5 * 5;
     }
-
     // endregion
-
-    public void openComputerGui(EntityPlayer player) {
-        ModGuiHandler.activeComputer = this;
-        player.openGui(SiliconGolems.instance, 0, player.world, 0, 0, 0);
-    }
 }

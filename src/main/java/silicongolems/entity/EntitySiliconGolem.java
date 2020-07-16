@@ -23,6 +23,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import silicongolems.SiliconGolems;
+import silicongolems.gui.ModGuiHandler;
 import silicongolems.inventory.InventorySiliconGolem;
 import silicongolems.util.Util;
 import silicongolems.computer.Computer;
@@ -67,11 +68,10 @@ public class EntitySiliconGolem extends EntityLiving {
         System.out.println(SiliconGolems.proxy.side());
         if (world.isRemote)
             return true;
-        if (!player.isSneaking() && computer.canOpen(player)) {
+        if (!player.isSneaking())
             computer.terminal.openGUI((EntityPlayerMP) player);
-        } else if (player.isSneaking()) {
-            player.openGui(SiliconGolems.instance, 1, world, getEntityId(), (int) player.posY, (int) player.posZ);
-        }
+        else
+            ModGuiHandler.openGolemInv(player, this);
         return true;
     }
 
@@ -104,7 +104,7 @@ public class EntitySiliconGolem extends EntityLiving {
                 justSpawned = false;
 //                computer.runProgram("startup");
             }
-            computer.updateComputer();
+            computer.update();
             if (rotationDirty) {
                 ModPacketHandler.INSTANCE.sendToAllTracking(new MessageHeading(this), this);
                 rotationDirty = false;

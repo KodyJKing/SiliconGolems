@@ -14,13 +14,13 @@ import silicongolems.entity.EntitySiliconGolem;
 
 import java.util.HashMap;
 
-public class WrapperGolem {
+public class GolemAPI {
 
     private EntitySiliconGolem golem;
     private Computer computer;
     private boolean autoSnap = true;
 
-    public WrapperGolem(EntitySiliconGolem golem) {
+    public GolemAPI(EntitySiliconGolem golem) {
         this.golem = golem;
         computer = golem.computer;
     }
