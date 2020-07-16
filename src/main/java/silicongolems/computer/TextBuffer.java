@@ -2,6 +2,7 @@ package silicongolems.computer;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
+import silicongolems.util.RunLengthEncoding;
 import silicongolems.util.Util;
 
 import java.util.Arrays;
@@ -20,6 +21,26 @@ public class TextBuffer {
         data = new char[width * height];
     }
 
+    // region network serialization
+    public void fromBytes(ByteBuf buf) {
+        shift = buf.readInt();
+        width = buf.readInt();
+        height = buf.readInt();
+        String text = ByteBufUtils.readUTF8String(buf);
+        text = RunLengthEncoding.decode(text);
+        data = text.toCharArray();
+    }
+
+    public void toBytes(ByteBuf buf) {
+        buf.writeInt(shift);
+        buf.writeInt(width);
+        buf.writeInt(height);
+        String text = String.copyValueOf(data);
+        text = RunLengthEncoding.encode(text);
+        ByteBufUtils.writeUTF8String(buf, text);
+    }
+    // endregion
+
     // region index logic
     private int lineIndex(int y) {
         return Util.mod(y + shift, height);
@@ -30,25 +51,7 @@ public class TextBuffer {
     }
     // endregion
 
-    // region network serialization
-    public void fromBytes(ByteBuf buf) {
-        shift = buf.readInt();
-        width = buf.readInt();
-        height = buf.readInt();
-        String text = ByteBufUtils.readUTF8String(buf);
-        data = text.toCharArray();
-    }
-
-    public void toBytes(ByteBuf buf) {
-        buf.writeInt(shift);
-        buf.writeInt(width);
-        buf.writeInt(height);
-        String text = String.copyValueOf(data);
-        ByteBufUtils.writeUTF8String(buf, text);
-    }
-    // endregion
-
-    // region API
+    // region api
     public void setShift(int shift) {
         this.shift = Util.mod(shift, height);
     }

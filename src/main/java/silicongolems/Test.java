@@ -1,12 +1,18 @@
 package silicongolems;
 
 import silicongolems.computer.TextBuffer;
+import silicongolems.util.RunLengthEncoding;
 
 import java.util.function.Consumer;
 
 public class Test {
 
     public static void main(String[] argv) {
+//        textBuffer();
+        runLengthEncoding();
+    }
+
+    private static void textBuffer() {
         TextBuffer buf = new TextBuffer(10, 10);
 
         Consumer<String> printLine = (line) -> {
@@ -25,7 +31,16 @@ public class Test {
             printLine.accept("" + i);
             printTerminal.run();
         }
+    }
 
+    private static void runLengthEncoding() {
+        String message = "\0\0\0\0\0\0\0\0\0\0\0\0           Hello World!";
+        String encoded = RunLengthEncoding.encode(message);
+        System.out.println(encoded);
+        String decoded = RunLengthEncoding.decode(encoded);
+        System.out.println(decoded);
+        if (!decoded.equals(message))
+            throw new AssertionError("Decoded message does not match input!");
     }
 
 }
