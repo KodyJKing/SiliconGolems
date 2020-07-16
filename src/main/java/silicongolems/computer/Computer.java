@@ -123,6 +123,7 @@ public class Computer {
 
     public void onDestroy() {
         killProcess();
+        terminal.onDestroy();
     }
 
     public void killProcess() {
