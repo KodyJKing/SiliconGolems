@@ -7,10 +7,12 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import silicongolems.gui.ModGuiHandler;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.network.SiliconGolemsMessage;
 import silicongolems.util.SidedIntMaps;
+import silicongolems.util.Util;
 
 public class Terminal {
 
@@ -22,14 +24,15 @@ public class Terminal {
     static int idCounter = 0;
     // endregion
 
-    public static final int width = 77;
-    public static final int height = 37;
+    public static final int WIDTH = 77;
+    public static final int HEIGHT = 37;
 
     public int id;
     public boolean isRemote;
     public EntityPlayerMP user;
-
+    public Computer computer;
     private boolean dirty = false;
+
     public State state = new State();
     public static class State {
         public TextBuffer text;
@@ -42,7 +45,7 @@ public class Terminal {
         this.id = id;
         addInstance(this);
         if (!isRemote)
-            this.state.text = new TextBuffer(width, height);
+            this.state.text = new TextBuffer(WIDTH, HEIGHT);
     }
 
     public Terminal(boolean isRemote) {
@@ -50,20 +53,33 @@ public class Terminal {
     }
 
     public void update() {
-        if (dirty) {
+        if (dirty && user != null) {
             dirty = false;
-            sendToUser(new CMUpdate(id, state));
+            sendToUser(new ClientMessageUpdate(id, state));
         }
     }
 
-    // region API
+    public void onDestroy() {
+        removeInstance(this);
+    }
+
+    public void input(char character, int keycode, boolean isDown, boolean isRepeat) {
+        ModPacketHandler.INSTANCE.sendToServer(new ServerMessageInputEvent(id, character, keycode, isDown, isRepeat));
+    }
+
+    public void openGUI(EntityPlayerMP player) {
+        this.user = player;
+        sendToUser(new ClientMessageOpen(id, state));
+    }
+
+    // region computer-api
     public String getLine(int y) {
         return state.text.getLine(y);
     }
 
     public void setLine(int y, String text) {
         state.text.setLine(y, text);
-        if (!isRemote) dirty = true; //sendToUser(new CMUpdate(id, state));
+        if (!isRemote) dirty = true;
     }
 
     public int getShift() {
@@ -72,27 +88,21 @@ public class Terminal {
 
     public void setShift(int shift) {
         state.text.setShift(shift);
-        if (!isRemote) dirty = true; //sendToUser(new CMUpdate(id, state));
+        if (!isRemote) dirty = true;
     }
-
     // endregion
 
     // region network
-        public void openGUI(EntityPlayerMP player) {
-            this.user = player;
-            sendToUser(new CMOpen(id, state));
-        }
-
         private void sendToUser(IMessage message) {
             if (user != null)
                 ModPacketHandler.INSTANCE.sendTo(message, user);
         }
 
-        public static class CMUpdate extends SiliconGolemsMessage {
+        public static class ClientMessageUpdate extends SiliconGolemsMessage {
             int id;
             State state;
-            public CMUpdate() {}
-            public CMUpdate(int id, State state) { this.id = id; this.state = state; }
+            public ClientMessageUpdate() {}
+            public ClientMessageUpdate(int id, State state) { this.id = id; this.state = state; }
 
             public void fromBytes(ByteBuf buf) {
                 id = buf.readInt();
@@ -120,9 +130,10 @@ public class Terminal {
             }
         }
 
-        public static class CMOpen extends CMUpdate {
-            public CMOpen() {}
-            public CMOpen(int id, State state) { this.id = id; this.state = state; }
+        public static class ClientMessageOpen extends ClientMessageUpdate {
+            public ClientMessageOpen() {}
+            public ClientMessageOpen(int id, State state) { this.id = id; this.state = state; }
+            @SideOnly(Side.CLIENT)
             public void runClient(MessageContext ctx) {
                 super.runClient(ctx);
                 EntityPlayer player = Minecraft.getMinecraft().player;
@@ -130,36 +141,45 @@ public class Terminal {
             }
         }
 
-//        public static class CMSetLine extends MessageJSON.Payload {
-//            int id;
-//            int y;
-//            String text;
-//            public CMSetLine() {}
-//            public CMSetLine(int id, int y, String text) { this.id = id; this.y = y; this.text = text; }
-//            public void runClient(MessageContext ctx) {
-//                Terminal terminal = getInstance(Side.CLIENT, id);
-//                if (terminal == null) return;
-//                terminal.setLine(y, text);
-//            }
-//        }
-//
-//        public static class CMSetShift extends MessageJSON.Payload {
-//            int id;
-//            int shift;
-//            public CMSetShift() {}
-//            public CMSetShift(int id, int shift) { this.id = id; this.shift = shift; }
-//            public void runClient(MessageContext ctx) {
-//                Terminal terminal = getInstance(Side.CLIENT, id);
-//                if (terminal == null) return;
-//                terminal.setShift(shift);
-//            }
-//        }
+        public static class ServerMessageInputEvent extends SiliconGolemsMessage {
+            int id;
+            char character;
+            int keycode;
+            boolean isDown, isRepeat;
+            public ServerMessageInputEvent() {}
+            public ServerMessageInputEvent(int id, char character, int keycode, boolean isDown, boolean isRepeat) {
+                this.id = id;
+                this.character = character;
+                this.keycode = keycode;
+                this.isDown = isDown;
+                this.isRepeat = isRepeat;
+            }
+
+            public void fromBytes(ByteBuf buf) {
+                id = buf.readInt();
+                character = buf.readChar();
+                keycode = buf.readInt();
+                isDown = buf.readBoolean();
+                isRepeat = buf.readBoolean();
+            }
+
+            public void toBytes(ByteBuf buf) {
+                buf.writeInt(id);
+                buf.writeChar(character);
+                buf.writeInt(keycode);
+                buf.writeBoolean(isDown);
+                buf.writeBoolean(isRepeat);
+            }
+
+            public void runServer(MessageContext ctx) {
+                System.out.println(Util.gson.toJson(this));
+            }
+        }
 
         public static void registerPackets() {
-            ModPacketHandler.registerPacket(CMUpdate.class, Side.CLIENT);
-            ModPacketHandler.registerPacket(CMOpen.class, Side.CLIENT);
-//            MessageJSON.registerMessage(CMSetLine.class);
-//            MessageJSON.registerMessage(CMSetShift.class);
+            ModPacketHandler.registerPacket(ClientMessageUpdate.class, Side.CLIENT);
+            ModPacketHandler.registerPacket(ClientMessageOpen.class, Side.CLIENT);
+            ModPacketHandler.registerPacket(ServerMessageInputEvent.class, Side.SERVER);
         }
     // endregion
 

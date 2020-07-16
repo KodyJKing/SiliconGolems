@@ -5,7 +5,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
-import silicongolems.util.V8Util;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -76,7 +75,6 @@ public class Computer {
     // endregion
 
     // region Logic and Threading
-
     public void startScript() {
         if (programThread != null) programThread.stopScript();
         String script = "let i = 0; while (true) { sleep(1000); terminal.setShift(terminal.getShift() - 1); terminal.setLine(0, '' + i++); }";

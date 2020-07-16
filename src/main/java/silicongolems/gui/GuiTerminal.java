@@ -1,10 +1,13 @@
 package silicongolems.gui;
 
 import net.minecraft.util.text.TextFormatting;
+import org.lwjgl.input.Keyboard;
 import silicongolems.computer.Terminal;
 
+import java.io.IOException;
+
 public class GuiTerminal extends GuiScreenText {
-    Terminal terminal;
+    private Terminal terminal;
 
     public GuiTerminal(Terminal terminal) {
         this.terminal = terminal;
@@ -13,8 +16,8 @@ public class GuiTerminal extends GuiScreenText {
     @Override
     public void drawTextRegion() {
         try {
-            int maxY = Math.min(getTextHeight(), Terminal.height);
-            int maxX = Math.min(getTextWidth(), Terminal.width);
+            int maxY = Math.min(getTextHeight(), Terminal.HEIGHT);
+            int maxX = Math.min(getTextWidth(), Terminal.WIDTH);
             for (int y = 0; y < maxY; y++) {
                 String line = terminal.getLine(y);
                 for (int x = 0; x < maxX; x++) {
@@ -24,5 +27,15 @@ public class GuiTerminal extends GuiScreenText {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void handleKeyboardInput() throws IOException {
+        super.handleKeyboardInput();
+        char character = Keyboard.getEventCharacter();
+        int keycode = Keyboard.getEventKey();
+        boolean isDown = Keyboard.getEventKeyState();
+        boolean isRepeat = Keyboard.isRepeatEvent();
+        terminal.input(character, keycode, isDown, isRepeat);
     }
 }
