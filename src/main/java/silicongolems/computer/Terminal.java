@@ -1,14 +1,11 @@
 package silicongolems.computer;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import silicongolems.gui.ModGuiHandler;
+import silicongolems.network.MessageJSON;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.network.SiliconGolemsMessage;
 import silicongolems.util.SidedIntMaps;
@@ -18,7 +15,12 @@ public class Terminal {
 
     // region instances
     public static final SidedIntMaps<Terminal> INSTANCES = new SidedIntMaps<>();
-    public static Terminal getInstance(Side side, int id) { return INSTANCES.get(side).get(id); }
+    public static Terminal getInstance(Side side, int id) { return getInstance(side, id, false); }
+    public static Terminal getInstance(Side side, int id, boolean force) {
+        Terminal result = INSTANCES.get(side).get(id);
+        if (result == null && force) result = new Terminal(side == Side.CLIENT, id);
+        return result;
+    }
     public static void addInstance(Terminal terminal) { INSTANCES.get(terminal.isRemote).put(terminal.id, terminal); }
     public static void removeInstance(Terminal terminal) { INSTANCES.get(terminal.isRemote).remove(terminal.id); }
     static int idCounter = 0;
@@ -33,7 +35,7 @@ public class Terminal {
     public Computer computer;
     private boolean dirty = false;
 
-    public State state = new State();
+    public State state;
     public static class State {
         public TextBuffer text;
         public int cursorX = 0;
@@ -44,8 +46,10 @@ public class Terminal {
         this.isRemote = isRemote;
         this.id = id;
         addInstance(this);
-        if (!isRemote)
+        if (!isRemote) {
+            this.state = new State();
             this.state.text = new TextBuffer(WIDTH, HEIGHT);
+        }
     }
 
     public Terminal(boolean isRemote) {
@@ -67,9 +71,13 @@ public class Terminal {
         ModPacketHandler.INSTANCE.sendToServer(new ServerMessageInputEvent(id, character, keycode, isDown, isRepeat));
     }
 
-    public void openGUI(EntityPlayerMP player) {
-        this.user = player;
-        sendToUser(new ClientMessageOpen(id, state));
+    public void onClientOpen() {
+        ModPacketHandler.INSTANCE.sendToServer(new ServerMessageSetUser(id, true).message());
+    }
+
+    public void onClientClose() {
+        removeInstance(this);
+        ModPacketHandler.INSTANCE.sendToServer(new ServerMessageSetUser(id, false).message());
     }
 
     // region computer-api
@@ -103,7 +111,6 @@ public class Terminal {
             State state;
             public ClientMessageUpdate() {}
             public ClientMessageUpdate(int id, State state) { this.id = id; this.state = state; }
-
             public void fromBytes(ByteBuf buf) {
                 id = buf.readInt();
                 state = new State();
@@ -112,7 +119,6 @@ public class Terminal {
                 state.text = new TextBuffer();
                 state.text.fromBytes(buf);
             }
-
             public void toBytes(ByteBuf buf) {
                 buf.writeInt(id);
                 buf.writeInt(state.cursorX);
@@ -121,23 +127,27 @@ public class Terminal {
             }
 
             public void runClient(MessageContext ctx) {
-                Terminal terminal;
-                if (INSTANCES.get(Side.CLIENT).containsKey(id))
-                    terminal = INSTANCES.get(Side.CLIENT).get(id);
-                else
-                    terminal = new Terminal(true, id);
+                Terminal terminal = INSTANCES.get(Side.CLIENT).get(id);
                 terminal.state = state;
             }
         }
 
-        public static class ClientMessageOpen extends ClientMessageUpdate {
-            public ClientMessageOpen() {}
-            public ClientMessageOpen(int id, State state) { this.id = id; this.state = state; }
-            @SideOnly(Side.CLIENT)
-            public void runClient(MessageContext ctx) {
-                super.runClient(ctx);
-                EntityPlayer player = Minecraft.getMinecraft().player;
-                ModGuiHandler.openTerminal(player, id);
+        public static class ServerMessageSetUser extends MessageJSON.Payload {
+            int id;
+            boolean use;
+            public ServerMessageSetUser() {}
+            public ServerMessageSetUser(int id, boolean use ) { this.id = id; this.use = use; }
+
+            public void runServer(MessageContext ctx) {
+                EntityPlayerMP player = ctx.getServerHandler().player;
+                Terminal terminal = INSTANCES.get(Side.SERVER).get(id);
+                if (terminal == null) return;
+                if (use) {
+                    terminal.user = player;
+                    terminal.sendToUser(new ClientMessageUpdate(id, terminal.state));
+                } else {
+                    terminal.user = null;
+                }
             }
         }
 
@@ -154,7 +164,6 @@ public class Terminal {
                 this.isDown = isDown;
                 this.isRepeat = isRepeat;
             }
-
             public void fromBytes(ByteBuf buf) {
                 id = buf.readInt();
                 character = buf.readChar();
@@ -162,7 +171,6 @@ public class Terminal {
                 isDown = buf.readBoolean();
                 isRepeat = buf.readBoolean();
             }
-
             public void toBytes(ByteBuf buf) {
                 buf.writeInt(id);
                 buf.writeChar(character);
@@ -178,8 +186,8 @@ public class Terminal {
 
         public static void registerPackets() {
             ModPacketHandler.registerPacket(ClientMessageUpdate.class, Side.CLIENT);
-            ModPacketHandler.registerPacket(ClientMessageOpen.class, Side.CLIENT);
             ModPacketHandler.registerPacket(ServerMessageInputEvent.class, Side.SERVER);
+            MessageJSON.registerMessage(ServerMessageSetUser.class);
         }
     // endregion
 

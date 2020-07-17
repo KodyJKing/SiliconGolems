@@ -27,7 +27,7 @@ public class ModGuiHandler implements IGuiHandler {
 
     public Object getGuiElement(int ID, EntityPlayer player, World world, BlockPos pos, boolean serverSide) {
         if (ID == TERMINAL && !serverSide)
-            return new GuiTerminal(Terminal.getInstance(Side.CLIENT, pos.getX()));
+            return new GuiTerminal(Terminal.getInstance(Side.CLIENT, pos.getX(), true));
 
         if (ID == GOLEM_INVENTORY)
             return golemInvGui(player, serverSide, pos.getX());

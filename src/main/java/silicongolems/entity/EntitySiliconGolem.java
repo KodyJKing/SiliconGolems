@@ -65,11 +65,10 @@ public class EntitySiliconGolem extends EntityLiving {
     // region Primary
     @Override
     protected boolean processInteract(EntityPlayer player, EnumHand hand) {
-        System.out.println(SiliconGolems.proxy.side());
-        if (world.isRemote)
+        if (!world.isRemote)
             return true;
         if (!player.isSneaking())
-            computer.terminal.openGUI((EntityPlayerMP) player);
+            ModGuiHandler.openTerminal(player,dataManager.get(terminalIdParameter));
         else
             ModGuiHandler.openGolemInv(player, this);
         return true;
@@ -102,7 +101,6 @@ public class EntitySiliconGolem extends EntityLiving {
         if (!world.isRemote) {
             if (justSpawned) {
                 justSpawned = false;
-//                computer.runProgram("startup");
             }
             computer.update();
             if (rotationDirty) {
