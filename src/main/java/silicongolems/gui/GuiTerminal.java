@@ -2,7 +2,7 @@ package silicongolems.gui;
 
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.input.Keyboard;
-import silicongolems.computer.Terminal;
+import silicongolems.computer.Terminal.Terminal;
 
 import java.io.IOException;
 

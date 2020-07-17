@@ -3,6 +3,8 @@ package silicongolems.computer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
+import silicongolems.computer.Terminal.Terminal;
+import silicongolems.computer.Terminal.TerminalAPI;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
 
@@ -19,7 +21,7 @@ public class Computer {
 
     public Computer() {
         files = new HashMap<>();
-        terminal = new Terminal(false);
+        terminal = new Terminal();
     }
 
     // region NBT

@@ -18,7 +18,7 @@ public class AutoSerialize {
             try {
                 Object value = ReflectionUtil.forceGet(field, obj);
                 switch (typeStr) {
-                    case "char": case "Char": buf.writeChar((char) value);
+                    case "char": case "Char": buf.writeChar((char) value); break;
                     case "int": case "Integer": buf.writeInt((int) value); break;
                     case "long": case "Long": buf.writeLong((long) value); break;
                     case "float": case "Float": buf.writeFloat((float) value); break;

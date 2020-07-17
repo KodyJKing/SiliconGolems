@@ -8,7 +8,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import silicongolems.SiliconGolems;
-import silicongolems.computer.Terminal;
+import silicongolems.computer.Terminal.TerminalRegistry;
 import silicongolems.entity.EntitySiliconGolem;
 
 public class ModGuiHandler implements IGuiHandler {
@@ -27,7 +27,7 @@ public class ModGuiHandler implements IGuiHandler {
 
     public Object getGuiElement(int ID, EntityPlayer player, World world, BlockPos pos, boolean serverSide) {
         if (ID == TERMINAL && !serverSide)
-            return new GuiTerminal(Terminal.getInstance(Side.CLIENT, pos.getX(), true));
+            return new GuiTerminal(TerminalRegistry.getInstance(Side.CLIENT, pos.getX(), true));
 
         if (ID == GOLEM_INVENTORY)
             return golemInvGui(player, serverSide, pos.getX());

@@ -1,38 +1,22 @@
-package silicongolems.computer;
+package silicongolems.computer.Terminal;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
-import silicongolems.network.MessageJSON;
+import silicongolems.computer.TextBuffer;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.network.SiliconGolemsMessage;
-import silicongolems.util.SidedIntMaps;
 import silicongolems.util.Util;
 
 public class Terminal {
-
-    // region instances
-    public static final SidedIntMaps<Terminal> INSTANCES = new SidedIntMaps<>();
-    public static Terminal getInstance(Side side, int id) { return getInstance(side, id, false); }
-    public static Terminal getInstance(Side side, int id, boolean force) {
-        Terminal result = INSTANCES.get(side).get(id);
-        if (result == null && force) result = new Terminal(side == Side.CLIENT, id);
-        return result;
-    }
-    public static void addInstance(Terminal terminal) { INSTANCES.get(terminal.isRemote).put(terminal.id, terminal); }
-    public static void removeInstance(Terminal terminal) { INSTANCES.get(terminal.isRemote).remove(terminal.id); }
-    static int idCounter = 0;
-    // endregion
-
     public static final int WIDTH = 77;
     public static final int HEIGHT = 37;
 
     public int id;
-    public boolean isRemote;
-    public EntityPlayerMP user;
-    public Computer computer;
+    boolean isRemote;
+    private EntityPlayerMP user;
     private boolean dirty = false;
 
     public State state;
@@ -42,45 +26,47 @@ public class Terminal {
         public int cursorY = 0;
     }
 
-    public Terminal(boolean isRemote, int id) {
+    Terminal(boolean isRemote, int id) {
         this.isRemote = isRemote;
         this.id = id;
-        addInstance(this);
+        TerminalRegistry.addInstance(this);
         if (!isRemote) {
             this.state = new State();
             this.state.text = new TextBuffer(WIDTH, HEIGHT);
         }
     }
 
-    public Terminal(boolean isRemote) {
-        this(isRemote, idCounter++);
+    Terminal(boolean isRemote) {
+        this(isRemote, TerminalRegistry.idCounter++);
     }
+
+    public Terminal() { this(false); }
 
     public void update() {
         if (dirty && user != null) {
             dirty = false;
-            sendToUser(new ClientMessageUpdate(id, state));
+            sendToUser(new CMUpdate(id, state));
         }
     }
 
     public void onDestroy() {
-        removeInstance(this);
+        TerminalRegistry.removeInstance(this);
     }
 
     public void input(char character, int keycode, boolean isDown, boolean isRepeat) {
-        ModPacketHandler.INSTANCE.sendToServer(new ServerMessageInputEvent(id, character, keycode, isDown, isRepeat));
+        ModPacketHandler.INSTANCE.sendToServer(new SMInput(id, character, keycode, isDown, isRepeat));
     }
 
     public void onClientOpen() {
-        ModPacketHandler.INSTANCE.sendToServer(new ServerMessageSetUser(id, true).message());
+        ModPacketHandler.INSTANCE.sendToServer(new SMSetUser(id, true));
     }
 
     public void onClientClose() {
-        removeInstance(this);
-        ModPacketHandler.INSTANCE.sendToServer(new ServerMessageSetUser(id, false).message());
+        TerminalRegistry.removeInstance(this);
+        ModPacketHandler.INSTANCE.sendToServer(new SMSetUser(id, false));
     }
 
-    // region computer-api
+    // region api
     public String getLine(int y) {
         return state.text.getLine(y);
     }
@@ -106,11 +92,10 @@ public class Terminal {
                 ModPacketHandler.INSTANCE.sendTo(message, user);
         }
 
-        public static class ClientMessageUpdate extends SiliconGolemsMessage {
-            int id;
-            State state;
-            public ClientMessageUpdate() {}
-            public ClientMessageUpdate(int id, State state) { this.id = id; this.state = state; }
+        public static class CMUpdate extends SiliconGolemsMessage {
+            int id; State state;
+            public CMUpdate() {}
+            public CMUpdate(int id, State state) { this.id = id; this.state = state; }
             public void fromBytes(ByteBuf buf) {
                 id = buf.readInt();
                 state = new State();
@@ -127,37 +112,35 @@ public class Terminal {
             }
 
             public void runClient(MessageContext ctx) {
-                Terminal terminal = INSTANCES.get(Side.CLIENT).get(id);
+                Terminal terminal = TerminalRegistry.getInstance(Side.CLIENT, id);
                 terminal.state = state;
             }
         }
 
-        public static class ServerMessageSetUser extends MessageJSON.Payload {
-            int id;
-            boolean use;
-            public ServerMessageSetUser() {}
-            public ServerMessageSetUser(int id, boolean use ) { this.id = id; this.use = use; }
+        public static class SMSetUser extends SiliconGolemsMessage {
+            int id; boolean use;
+            public SMSetUser() {}
+            public SMSetUser(int id, boolean use ) { this.id = id; this.use = use; }
+            public void fromBytes(ByteBuf buf) { id = buf.readInt(); use = buf.readBoolean(); }
+            public void toBytes(ByteBuf buf) { buf.writeInt(id); buf.writeBoolean(use); }
 
             public void runServer(MessageContext ctx) {
                 EntityPlayerMP player = ctx.getServerHandler().player;
-                Terminal terminal = INSTANCES.get(Side.SERVER).get(id);
+                Terminal terminal = TerminalRegistry.getInstance(Side.SERVER, id);
                 if (terminal == null) return;
                 if (use) {
                     terminal.user = player;
-                    terminal.sendToUser(new ClientMessageUpdate(id, terminal.state));
+                    terminal.sendToUser(new CMUpdate(id, terminal.state));
                 } else {
                     terminal.user = null;
                 }
             }
         }
 
-        public static class ServerMessageInputEvent extends SiliconGolemsMessage {
-            int id;
-            char character;
-            int keycode;
-            boolean isDown, isRepeat;
-            public ServerMessageInputEvent() {}
-            public ServerMessageInputEvent(int id, char character, int keycode, boolean isDown, boolean isRepeat) {
+        public static class SMInput extends SiliconGolemsMessage {
+            int id; char character; int keycode; boolean isDown, isRepeat;
+            public SMInput() {}
+            public SMInput(int id, char character, int keycode, boolean isDown, boolean isRepeat) {
                 this.id = id;
                 this.character = character;
                 this.keycode = keycode;
@@ -185,9 +168,9 @@ public class Terminal {
         }
 
         public static void registerPackets() {
-            ModPacketHandler.registerPacket(ClientMessageUpdate.class, Side.CLIENT);
-            ModPacketHandler.registerPacket(ServerMessageInputEvent.class, Side.SERVER);
-            MessageJSON.registerMessage(ServerMessageSetUser.class);
+            ModPacketHandler.registerPacket(CMUpdate.class, Side.CLIENT);
+            ModPacketHandler.registerPacket(SMInput.class, Side.SERVER);
+            ModPacketHandler.registerPacket(SMSetUser.class, Side.SERVER);
         }
     // endregion
 

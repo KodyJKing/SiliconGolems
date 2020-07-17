@@ -1,4 +1,4 @@
-package silicongolems.computer;
+package silicongolems.computer.Terminal;
 
 public class TerminalAPI {
     private Terminal terminal;
