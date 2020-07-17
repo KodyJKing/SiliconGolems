@@ -1,6 +1,9 @@
 package silicongolems;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import silicongolems.computer.TextBuffer;
+import silicongolems.util.AutoSerialize;
 import silicongolems.util.RunLengthEncoding;
 
 import java.util.function.Consumer;
@@ -9,7 +12,8 @@ public class Test {
 
     public static void main(String[] argv) {
 //        textBuffer();
-        runLengthEncoding();
+//        runLengthEncoding();
+        autoSerialize();
     }
 
     private static void textBuffer() {
@@ -41,6 +45,16 @@ public class Test {
         System.out.println(decoded);
         if (!decoded.equals(message))
             throw new AssertionError("Decoded message does not match input!");
+    }
+
+    private static void autoSerialize() {
+        Object foo = new Object() {
+            public int bar = 10;
+            public long baz = 100;
+            public char[] data = new char[100];
+        };
+        ByteBuf buf = Unpooled.buffer();
+        AutoSerialize.serialize(buf, foo);
     }
 
 }
