@@ -24,6 +24,17 @@ public class Terminal {
         public TextBuffer text;
         public int cursorX = 0;
         public int cursorY = 0;
+        public void toBytes(ByteBuf buf) {
+            buf.writeInt(cursorX);
+            buf.writeInt(cursorY);
+            text.toBytes(buf);
+        }
+        public void fromBytes(ByteBuf buf) {
+            cursorX = buf.readInt();
+            cursorY = buf.readInt();
+            text = new TextBuffer();
+            text.fromBytes(buf);
+        }
     }
 
     Terminal(boolean isRemote, int id) {
@@ -96,19 +107,14 @@ public class Terminal {
             int id; State state;
             public CMUpdate() {}
             public CMUpdate(int id, State state) { this.id = id; this.state = state; }
+            public void toBytes(ByteBuf buf) {
+                buf.writeInt(id);
+                state.toBytes(buf);
+            }
             public void fromBytes(ByteBuf buf) {
                 id = buf.readInt();
                 state = new State();
-                state.cursorX = buf.readInt();
-                state.cursorY = buf.readInt();
-                state.text = new TextBuffer();
-                state.text.fromBytes(buf);
-            }
-            public void toBytes(ByteBuf buf) {
-                buf.writeInt(id);
-                buf.writeInt(state.cursorX);
-                buf.writeInt(state.cursorY);
-                state.text.toBytes(buf);
+                state.fromBytes(buf);
             }
 
             public void runClient(MessageContext ctx) {
@@ -121,8 +127,8 @@ public class Terminal {
             int id; boolean use;
             public SMSetUser() {}
             public SMSetUser(int id, boolean use ) { this.id = id; this.use = use; }
-            public void fromBytes(ByteBuf buf) { id = buf.readInt(); use = buf.readBoolean(); }
             public void toBytes(ByteBuf buf) { buf.writeInt(id); buf.writeBoolean(use); }
+            public void fromBytes(ByteBuf buf) { id = buf.readInt(); use = buf.readBoolean(); }
 
             public void runServer(MessageContext ctx) {
                 EntityPlayerMP player = ctx.getServerHandler().player;
@@ -147,19 +153,19 @@ public class Terminal {
                 this.isDown = isDown;
                 this.isRepeat = isRepeat;
             }
-            public void fromBytes(ByteBuf buf) {
-                id = buf.readInt();
-                character = buf.readChar();
-                keycode = buf.readInt();
-                isDown = buf.readBoolean();
-                isRepeat = buf.readBoolean();
-            }
             public void toBytes(ByteBuf buf) {
                 buf.writeInt(id);
                 buf.writeChar(character);
                 buf.writeInt(keycode);
                 buf.writeBoolean(isDown);
                 buf.writeBoolean(isRepeat);
+            }
+            public void fromBytes(ByteBuf buf) {
+                id = buf.readInt();
+                character = buf.readChar();
+                keycode = buf.readInt();
+                isDown = buf.readBoolean();
+                isRepeat = buf.readBoolean();
             }
 
             public void runServer(MessageContext ctx) {

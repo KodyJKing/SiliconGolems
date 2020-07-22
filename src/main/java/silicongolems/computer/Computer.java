@@ -24,7 +24,6 @@ public class Computer {
         terminal = new Terminal();
     }
 
-    // region NBT
     public NBTTagCompound writeNBT(NBTTagCompound nbt) {
         nbt.setString("files", Util.gson.toJson(files));
         return nbt;
@@ -33,32 +32,17 @@ public class Computer {
     public void readNBT(NBTTagCompound nbt) {
         files = Util.gson.fromJson(nbt.getString("files"), files.getClass());
     }
-    // endregion
 
-    // region Commands and Scripting
-    public Object getAPI() {
-        Object api = new Object() {
-            public Object golem = new GolemAPI(entity);
+    public APIFactory getAPIFactory() {
+        return (runtime) -> new Object() {
+            public Object golem = new GolemAPI(runtime, entity);
             public Object terminal = new TerminalAPI(Computer.this.terminal);
-
-            public void sleep(int milis) throws InterruptedException {
-                Thread.sleep(milis);
-            }
-
-            public void log(Object message) {
-                System.out.println(message);
-            }
-
-            public void exit() {
-                killProcess();
-            }
+            public void sleep(int milis) throws InterruptedException { Thread.sleep(milis); }
+            public void exit() { killProcess(); }
+            public void log(Object message) { System.out.println(message); }
         };
-
-        return api;
     }
-    // endregion
 
-    // region State
     public void writeFile(String path, String text) {
         files.put(path, text);
     }
@@ -74,13 +58,13 @@ public class Computer {
             throw new Exception("File not found!");
         return files.get(path);
     }
-    // endregion
 
-    // region Logic and Threading
+    // region operation
     public void startScript() {
         if (programThread != null) programThread.stopScript();
-        String script = "let i = 0; while (true) { sleep(1000); terminal.setShift(terminal.getShift() - 1); terminal.setLine(0, '' + i++); }";
-        programThread = JSThread.spawnThread(script, getAPI());
+//        String script = "let i = 0; while (true) { sleep(1000); terminal.print(i++) }";
+        String script = Util.getResource("/assets/silicongolems/js/edit.js");
+        programThread = JSThread.spawnThread(script, getAPIFactory());
     }
 
     public void update() {
@@ -135,9 +119,9 @@ public class Computer {
             programThread.stopScript();
         }
     }
+    // endregion
 
     public boolean inRange(EntityPlayer player) {
         return entity.getDistanceSq(player.posX, player.posY, player.posZ) < 5 * 5;
     }
-    // endregion
 }

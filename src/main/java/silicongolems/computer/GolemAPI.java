@@ -1,6 +1,8 @@
 package silicongolems.computer;
 
+import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Object;
+import com.eclipsesource.v8.utils.V8ObjectUtils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.MoverType;
 import net.minecraft.item.ItemStack;
@@ -16,11 +18,13 @@ import java.util.HashMap;
 
 public class GolemAPI {
 
+    private V8 runtime;
     private EntitySiliconGolem golem;
     private Computer computer;
     private boolean autoSnap = true;
 
-    public GolemAPI(EntitySiliconGolem golem) {
+    public GolemAPI(V8 runtime, EntitySiliconGolem golem) {
+        this.runtime = runtime;
         this.golem = golem;
         computer = golem.computer;
     }
@@ -206,13 +210,16 @@ public class GolemAPI {
 
     public Object scanStack(int i) {
         ItemStack stack = golem.inventory.getStackInSlot(i);
-        return stack == ItemStack.EMPTY ? null : JSThread.createObject(ConvertData.itemData(stack));
+        return stack == ItemStack.EMPTY ? null : V8ObjectUtils.toV8Object(runtime, ConvertData.itemData(stack));
+//        return stack == ItemStack.EMPTY ? null : JSThread.createObject(ConvertData.itemData(stack));
+
     }
 
     public V8Object scan(int forward, int up, int right) {
         BlockPos pos = relPos(forward, up, right);
         HashMap result = ConvertData.blockData(golem.world, pos);
-        return JSThread.createObject(result);
+        return V8ObjectUtils.toV8Object(runtime, result);
+//        return JSThread.createObject(result);
     }
 
     public V8Object scan() {
