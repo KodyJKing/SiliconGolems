@@ -1,5 +1,6 @@
 package silicongolems.item;
 
+import com.eclipsesource.v8.V8;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResult;
@@ -22,20 +23,13 @@ public class ItemDevTool extends ItemBase {
         ItemStack stack = player.getHeldItem(hand);
         ActionResult<ItemStack> result = new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
 
-        Object o = getClass().getClassLoader();
-        Class c = o.getClass();
-        System.out.println(c.getName());
         try {
-            try (
-                InputStream stream = getClass().getResourceAsStream("/assets/silicongolems/js/edit.js");
-                InputStreamReader reader = new InputStreamReader(stream);
-                BufferedReader br = new BufferedReader(reader);
-                ) {
-                String line;
-                while((line = br.readLine()) != null)
-                    System.out.println(line);
-            }
-        } catch (Exception e) { e.printStackTrace(); }
+            V8 engine = V8.createV8Runtime();
+            Object out = engine.executeIntegerScript("10 + 32");
+            System.out.println(out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return result;
     }

@@ -4,6 +4,8 @@ import com.eclipsesource.v8.*;
 import com.eclipsesource.v8.utils.V8ObjectUtils;
 import silicongolems.util.V8Util;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

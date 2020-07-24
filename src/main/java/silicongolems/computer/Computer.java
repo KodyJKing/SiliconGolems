@@ -62,8 +62,10 @@ public class Computer {
     // region operation
     public void startScript() {
         if (programThread != null) programThread.stopScript();
-//        String script = "let i = 0; while (true) { sleep(1000); terminal.print(i++) }";
         String script = Util.getResource("/assets/silicongolems/js/edit.js");
+        System.out.println(
+                "\nScript: \n    " + script.replace("\n","\n     ")
+        );
         programThread = JSThread.spawnThread(script, getAPIFactory());
     }
 
