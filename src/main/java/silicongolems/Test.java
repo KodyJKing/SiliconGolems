@@ -6,7 +6,10 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import silicongolems.computer.TextBuffer;
 import silicongolems.util.RunLengthEncoding;
+import silicongolems.util.Util;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.nio.charset.Charset;
@@ -66,56 +69,54 @@ public class Test {
     }
 
     private static void graal() {
-
 //        try {
+//            System.out.println(
+//                System.getProperty("user.dir")
+//            );
 //            ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
-//            engine.put("foo", new Foo());
-//            engine.eval("print(foo.bar)");
-//            engine.eval("print(foo.baz)");
+//
+//            Foo foo = new Foo();
+//            engine.getBindings(ScriptContext.ENGINE_SCOPE).put("foo", foo);
+//
+//            Thread notifyThread = new Thread(() -> {
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                System.out.println("About to notify");
+//                synchronized (foo) { foo.notify(); }
+//            });
+//            notifyThread.start();
+//
+//            engine.eval("foo.await(); print('Done!')");
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
 
 //        try {
 //            Context c = Context.newBuilder("js")
+////                    .allowAllAccess(true)
 ////                    .allowHostAccess(HostAccess.ALL)
 //                    .build();
-//            HashMap<String, String> map = new HashMap<>();
-//            map.put("foo", "bar");
-//            c.getBindings("js").putMember("foo", new Foo());
-//            c.getBindings("js").putMember("map", map);
-//            c.eval("js", "print(foo.bar)");
-//            c.eval("js", "print(foo.baz)");
-//            c.eval("js", "print(map)");
-//            c.eval("js","print(foo.getClass())");
+//            c.eval("js","load('./foo.js')");
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
-
-        try {
-            String port = "4242";
-            String path = java.util.UUID.randomUUID().toString();
-            String remoteConnect = "true";
-            Context context = Context.newBuilder("js")
-                    .option("inspect", port)
-                    .option("inspect.Path", path)
-                    .option("inspect.Remote", remoteConnect)
-                    .build();
-            String hostAdress = "localhost";
-            String url = String.format(
-                    "chrome-devtools://devtools/bundled/js_app.html?ws=%s:%s/%s",
-                    hostAdress, port, path);
-            System.out.println(url);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
     }
-
-    public static class Foo {
-        @HostAccess.Export
-        public int bar = 42;
-        public int baz = 43;
-    }
+//
+//    public static class Foo {
+//        @HostAccess.Export
+//        public void await() {
+//            try {
+//                System.out.println("about to wait");
+//                synchronized (this) {
+//                    wait();
+//                }
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
 }

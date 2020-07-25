@@ -1,11 +1,14 @@
-package silicongolems.computer.Terminal;
+package silicongolems.computer.terminal;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import org.graalvm.polyglot.HostAccess;
+import silicongolems.computer.Computer;
 import silicongolems.computer.TextBuffer;
+import silicongolems.computer.Event;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.network.SiliconGolemsMessage;
 import silicongolems.util.Util;
@@ -18,6 +21,7 @@ public class Terminal {
     boolean isRemote;
     private EntityPlayerMP user;
     private boolean dirty = false;
+    private Computer computer;
 
     public State state;
     public static class State {
@@ -51,7 +55,10 @@ public class Terminal {
         this(isRemote, TerminalRegistry.idCounter++);
     }
 
-    public Terminal() { this(false); }
+    public Terminal(Computer computer) {
+        this(false);
+        this.computer = computer;
+    }
 
     public void update() {
         if (dirty && user != null) {
@@ -64,8 +71,8 @@ public class Terminal {
         TerminalRegistry.removeInstance(this);
     }
 
-    public void input(char character, int keycode, boolean isDown, boolean isRepeat) {
-        ModPacketHandler.INSTANCE.sendToServer(new SMInput(id, character, keycode, isDown, isRepeat));
+    public void input(KeyboardEvent event) {
+        ModPacketHandler.INSTANCE.sendToServer(new SMInput(id, event));
     }
 
     public void onClientOpen() {
@@ -119,7 +126,7 @@ public class Terminal {
 
             public void runClient(MessageContext ctx) {
                 Terminal terminal = TerminalRegistry.getInstance(Side.CLIENT, id);
-                terminal.state = state;
+                if (terminal != null) terminal.state = state;
             }
         }
 
@@ -144,32 +151,44 @@ public class Terminal {
         }
 
         public static class SMInput extends SiliconGolemsMessage {
-            int id; char character; int keycode; boolean isDown, isRepeat;
+            int id;
+            KeyboardEvent event;
             public SMInput() {}
-            public SMInput(int id, char character, int keycode, boolean isDown, boolean isRepeat) {
-                this.id = id;
-                this.character = character;
-                this.keycode = keycode;
-                this.isDown = isDown;
-                this.isRepeat = isRepeat;
-            }
+            public SMInput(int id, KeyboardEvent event) { this.id = id; this.event = event; }
             public void toBytes(ByteBuf buf) {
                 buf.writeInt(id);
+                event.toBytes(buf); }
+            public void fromBytes(ByteBuf buf) {
+                id = buf.readInt();
+                event = new KeyboardEvent();
+                event.fromBytes(buf);
+            }
+
+            public void runServer(MessageContext ctx) {
+                System.out.println(Util.gson.toJson(this));
+                Terminal terminal = TerminalRegistry.getInstance(Side.SERVER, id);
+                if (terminal != null)
+                    terminal.computer.queueEvent(event);
+            }
+        }
+
+        public static class KeyboardEvent extends Event {
+            @HostAccess.Export public char character;
+            @HostAccess.Export public int keycode;
+            @HostAccess.Export public boolean isDown;
+            @HostAccess.Export public boolean isRepeat;
+            public KeyboardEvent() { super("keyboard"); }
+            public void toBytes(ByteBuf buf) {
                 buf.writeChar(character);
                 buf.writeInt(keycode);
                 buf.writeBoolean(isDown);
                 buf.writeBoolean(isRepeat);
             }
             public void fromBytes(ByteBuf buf) {
-                id = buf.readInt();
                 character = buf.readChar();
                 keycode = buf.readInt();
                 isDown = buf.readBoolean();
                 isRepeat = buf.readBoolean();
-            }
-
-            public void runServer(MessageContext ctx) {
-                System.out.println(Util.gson.toJson(this));
             }
         }
 

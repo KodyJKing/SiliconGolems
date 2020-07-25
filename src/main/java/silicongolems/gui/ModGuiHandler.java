@@ -8,7 +8,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import silicongolems.SiliconGolems;
-import silicongolems.computer.Terminal.TerminalRegistry;
+import silicongolems.computer.terminal.TerminalRegistry;
 import silicongolems.entity.EntitySiliconGolem;
 
 public class ModGuiHandler implements IGuiHandler {

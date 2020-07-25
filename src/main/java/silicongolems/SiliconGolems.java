@@ -18,6 +18,8 @@ import silicongolems.item.ModItems;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.proxy.CommonProxy;
 
+import javax.script.ScriptEngineManager;
+
 @Mod(modid = SiliconGolems.modId, version = SiliconGolems.version, acceptedMinecraftVersions = "[1.12.2]", name = "Silicon Golems")
 public class SiliconGolems
 {

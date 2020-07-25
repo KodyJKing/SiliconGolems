@@ -1,84 +1,102 @@
 package silicongolems.computer;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import net.minecraft.nbt.NBTTagCompound;
-import silicongolems.computer.Terminal.Terminal;
-import silicongolems.computer.Terminal.TerminalAPI;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
+import silicongolems.SiliconGolems;
+import silicongolems.computer.terminal.Terminal;
+import silicongolems.computer.terminal.TerminalAPI;
 import silicongolems.util.Util;
-import silicongolems.entity.EntitySiliconGolem;
 
+import javax.script.*;
 import java.util.ArrayDeque;
-import java.util.HashMap;
+import java.util.Deque;
 
 public class Computer {
-    HashMap<String, String> files;
-    public EntitySiliconGolem entity;
-    public EntityPlayerMP user;
-    public Terminal terminal;
-    public JSThread programThread;
-    private boolean justStarted = true;
+    private Thread programThread;
+    private boolean isRunning = false;
+    private Bindings bindings = new SimpleBindings();
+    private Deque<Runnable> jobs = new ArrayDeque<>();
+    private Deque<Event> events = new ArrayDeque<>();
 
-    public Computer() {
-        files = new HashMap<>();
-        terminal = new Terminal();
+    public Terminal terminal = new Terminal(this);
+
+    public Bindings getBindings() {
+        return bindings;
     }
 
-    public NBTTagCompound writeNBT(NBTTagCompound nbt) {
-        nbt.setString("files", Util.gson.toJson(files));
-        return nbt;
+    private Bindings createBindingsInstance() {
+        Bindings bindings = new SimpleBindings();
+        bindings.put("terminal", new TerminalAPI(terminal));
+        bindings.put("os", new API());
+        if (this.bindings != null) bindings.putAll(this.bindings);
+        return bindings;
     }
 
-    public void readNBT(NBTTagCompound nbt) {
-        files = Util.gson.fromJson(nbt.getString("files"), files.getClass());
-    }
-
-    public APIFactory getAPIFactory() {
-        return (runtime) -> new Object() {
-            public Object golem = new GolemAPI(runtime, entity);
-            public Object terminal = new TerminalAPI(Computer.this.terminal);
-            public void sleep(int milis) throws InterruptedException { Thread.sleep(milis); }
-            public void exit() { killProcess(); }
-            public void log(Object message) { System.out.println(message); }
-        };
-    }
-
-    public void writeFile(String path, String text) {
-        files.put(path, text);
-    }
-
-    public String readOrMakeFile(String path) {
-        if (!files.containsKey(path))
-            writeFile(path, "");
-        return files.get(path);
-    }
-
-    public String readFile(String path) throws Exception {
-        if (!files.containsKey(path))
-            throw new Exception("File not found!");
-        return files.get(path);
+    public class API {
+        @HostAccess.Export
+        public void sleep(int milis) throws InterruptedException { Thread.sleep(milis); }
+        @HostAccess.Export
+        public void exit() { Computer.this.killProcess(); }
+        @HostAccess.Export
+        public void log(Object o) { System.out.println(Util.gson.toJson(o)); }
+        @HostAccess.Export
+        public Event awaitEvent() {
+            boolean empty;
+            synchronized (events) { empty = events.isEmpty(); }
+            if (empty) {
+                synchronized (events) {
+                    try {
+                        events.wait();
+                    } catch (InterruptedException e) {
+                        throw new ScriptRuntimeException(e);
+                    }
+                }
+            }
+            synchronized (events) { return events.removeLast(); }
+        }
     }
 
     // region operation
-    public void startScript() {
-        if (programThread != null) programThread.stopScript();
+    private void startScript() {
         String script = Util.getResource("/assets/silicongolems/js/edit.js");
-        System.out.println(
-                "\nScript: \n    " + script.replace("\n","\n     ")
-        );
-        programThread = JSThread.spawnThread(script, getAPIFactory());
+        runScript(script);
+    }
+
+    private void runScript(String script) {
+        if (programThread != null) stopScript();
+        programThread = new Thread(() -> {
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
+            engine.setBindings(createBindingsInstance(), ScriptContext.ENGINE_SCOPE);
+            try {
+                isRunning = true;
+                engine.eval(script);
+            } catch (ScriptException e) {
+                e.printStackTrace();
+            } finally {
+                isRunning = false;
+            }
+        });
+        programThread.start();
+    }
+
+    private void stopScript() {
+        isRunning = false;
+        programThread.interrupt();
     }
 
     public void update() {
-        if (user != null && !inRange(user))
-            user = null;
-
         if (terminal != null)
             terminal.update();
 
-        if (justStarted)  {
+        if (!isRunning())
             startScript();
-            justStarted = false;
+
+        if (awaitingUpdate()) {
+            synchronized (programThread) {
+                programThread.notify();
+            }
         }
 
         synchronized (jobs) {
@@ -86,8 +104,6 @@ public class Computer {
                 jobs.removeLast().run();
         }
     }
-
-    ArrayDeque<Runnable> jobs = new ArrayDeque<>();
 
     public void addJob(Runnable job) {
         if (isRunning()) {
@@ -97,10 +113,25 @@ public class Computer {
         }
     }
 
-    private boolean isRunning() {
-        return programThread != null && programThread.isRunning && programThread.isAlive();
+    public void queueEvent(Event event) {
+        if (isRunning()) {
+            synchronized (events) {
+                events.addFirst(event);
+                events.notify();
+            }
+        }
     }
 
+    private boolean isRunning() {
+        return programThread != null && isRunning && programThread.isAlive();
+    }
+
+    private boolean awaitingUpdate() {
+        return programThread != null && programThread.getState() == Thread.State.WAITING;
+    }
+
+    // This is used to impose recovery time after performing certain tasks like moving a golem.
+    // I should probably add a special object to wait/notify on.
     public void awaitUpdate(int sleepMilis) throws InterruptedException {
         synchronized (programThread) {
                 if (sleepMilis > 0)
@@ -118,12 +149,15 @@ public class Computer {
         if (programThread == null)
             return;
         synchronized (programThread) {
-            programThread.stopScript();
+            stopScript();
         }
     }
     // endregion
 
-    public boolean inRange(EntityPlayer player) {
-        return entity.getDistanceSq(player.posX, player.posY, player.posZ) < 5 * 5;
+    public NBTTagCompound writeNBT(NBTTagCompound nbt) {
+        return nbt;
+    }
+
+    public void readNBT(NBTTagCompound nbt) {
     }
 }

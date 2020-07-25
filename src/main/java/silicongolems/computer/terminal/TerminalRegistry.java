@@ -1,4 +1,4 @@
-package silicongolems.computer.Terminal;
+package silicongolems.computer.terminal;
 
 import net.minecraftforge.fml.relauncher.Side;
 import silicongolems.util.SidedIntMaps;

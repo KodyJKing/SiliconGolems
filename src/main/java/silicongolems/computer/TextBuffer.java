@@ -66,7 +66,7 @@ public class TextBuffer {
 
     public void setLine(int y, String text) {
         int firstOfBottom = index(0, y);
-        for (int i = 0; i < text.length(); i++)
+        for (int i = 0; i < text.length() && i < width; i++)
             data[firstOfBottom + i] = text.charAt(i);
         for (int i = text.length(); i < width; i++)
             data[firstOfBottom + i] = 0;

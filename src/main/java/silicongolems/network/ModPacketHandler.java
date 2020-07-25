@@ -4,7 +4,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import silicongolems.SiliconGolems;
-import silicongolems.computer.Terminal.Terminal;
+import silicongolems.computer.terminal.Terminal;
 
 public class ModPacketHandler {
 

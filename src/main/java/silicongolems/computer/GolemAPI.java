@@ -10,6 +10,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.*;
 import net.minecraftforge.common.util.FakePlayer;
+import org.graalvm.polyglot.HostAccess;
 import silicongolems.util.FakePlayerUtil;
 import silicongolems.util.Util;
 import silicongolems.entity.EntitySiliconGolem;
@@ -18,21 +19,21 @@ import java.util.HashMap;
 
 public class GolemAPI {
 
-    private V8 runtime;
     private EntitySiliconGolem golem;
     private Computer computer;
     private boolean autoSnap = true;
 
-    public GolemAPI(V8 runtime, EntitySiliconGolem golem) {
-        this.runtime = runtime;
+    public GolemAPI(EntitySiliconGolem golem) {
         this.golem = golem;
         computer = golem.computer;
     }
 
+    @HostAccess.Export
     public void grid(boolean val) {
         autoSnap = val;
     }
 
+    @HostAccess.Export
     public void turn(float angle) throws InterruptedException {
         computer.addJob(() -> {
             golem.rotationYawHead += angle;
@@ -47,6 +48,7 @@ public class GolemAPI {
         computer.awaitUpdate(0);
     }
 
+    @HostAccess.Export
     public boolean move() throws InterruptedException {
         int oldx = (int) golem.posX;
         int oldz = (int) golem.posZ;
@@ -69,6 +71,7 @@ public class GolemAPI {
 
     }
 
+    @HostAccess.Export
     public boolean jump() throws InterruptedException {
         int oldy = (int) golem.posY;
 
@@ -80,18 +83,21 @@ public class GolemAPI {
         return ((int) golem.posY) != oldy;
     }
 
+    @HostAccess.Export
     public void snap() {
         computer.addJob(() -> {
             golem.snapToGrid();
         });
     }
 
+    @HostAccess.Export
     public void align() {
         computer.addJob(() -> {
             golem.alignToGrid();
         });
     }
 
+    @HostAccess.Export
     public boolean build(int index, int forward, int up, int right) throws InterruptedException {
         BlockPos pos = relPos(forward, up, right);
 
@@ -116,10 +122,12 @@ public class GolemAPI {
         return true;
     }
 
+    @HostAccess.Export
     public boolean build(int index) throws InterruptedException {
         return build(index, 1, 0, 0);
     }
 
+    @HostAccess.Export
     public void use(int index, int forward, int up, int right) throws InterruptedException {
         EnumFacing dir = up == 0 ? golem.getHorizontalFacing().getOpposite()
                 : (up == -1 ? EnumFacing.UP : EnumFacing.DOWN);
@@ -141,10 +149,12 @@ public class GolemAPI {
         computer.awaitUpdate(125);
     }
 
+    @HostAccess.Export
     public void  use(int index) throws InterruptedException {
         use(index, 1, 0, 0);
     }
 
+    @HostAccess.Export
     public void click(int index, float pitch) throws InterruptedException {
         golem.rotationPitch = pitch;
         computer.addJob(() -> {
@@ -161,6 +171,7 @@ public class GolemAPI {
         computer.awaitUpdate(125);
     }
 
+    @HostAccess.Export
     public void click(int index) throws InterruptedException {
         click(index, 0);
     }
@@ -208,25 +219,29 @@ public class GolemAPI {
     // computer.awaitUpdate(62);
     // }
 
+    @HostAccess.Export
     public Object scanStack(int i) {
         ItemStack stack = golem.inventory.getStackInSlot(i);
-        return stack == ItemStack.EMPTY ? null : V8ObjectUtils.toV8Object(runtime, ConvertData.itemData(stack));
+        return stack == ItemStack.EMPTY ? null : ConvertData.itemData(stack);
+//        return stack == ItemStack.EMPTY ? null : V8ObjectUtils.toV8Object(runtime, ConvertData.itemData(stack));
 //        return stack == ItemStack.EMPTY ? null : JSThread.createObject(ConvertData.itemData(stack));
 
     }
 
-    public V8Object scan(int forward, int up, int right) {
+    @HostAccess.Export
+    public Object scan(int forward, int up, int right) {
         BlockPos pos = relPos(forward, up, right);
         HashMap result = ConvertData.blockData(golem.world, pos);
-        return V8ObjectUtils.toV8Object(runtime, result);
-//        return JSThread.createObject(result);
+        return result;
     }
 
-    public V8Object scan() {
+    @HostAccess.Export
+    public Object scan() {
         return scan(1, 0, 0);
     }
 
     @Override
+    @HostAccess.Export
     public String toString() {
         return "golem" + Integer.toString(golem.getEntityId());
     }

@@ -2,7 +2,7 @@ package silicongolems.gui;
 
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.input.Keyboard;
-import silicongolems.computer.Terminal.Terminal;
+import silicongolems.computer.terminal.Terminal;
 
 import java.io.IOException;
 
@@ -45,10 +45,11 @@ public class GuiTerminal extends GuiScreenText {
     @Override
     public void handleKeyboardInput() throws IOException {
         super.handleKeyboardInput();
-        char character = Keyboard.getEventCharacter();
-        int keycode = Keyboard.getEventKey();
-        boolean isDown = Keyboard.getEventKeyState();
-        boolean isRepeat = Keyboard.isRepeatEvent();
-        terminal.input(character, keycode, isDown, isRepeat);
+        Terminal.KeyboardEvent event = new Terminal.KeyboardEvent();
+        event.character = Keyboard.getEventCharacter();
+        event.keycode = Keyboard.getEventKey();
+        event.isDown = Keyboard.getEventKeyState();
+        event.isRepeat = Keyboard.isRepeatEvent();
+        terminal.input(event);
     }
 }

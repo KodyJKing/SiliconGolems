@@ -21,6 +21,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
+import silicongolems.computer.GolemAPI;
 import silicongolems.gui.ModGuiHandler;
 import silicongolems.inventory.InventorySiliconGolem;
 import silicongolems.util.Util;
@@ -49,7 +50,7 @@ public class EntitySiliconGolem extends EntityLiving {
         inventory = new InventorySiliconGolem(this);
         if (!world.isRemote) {
             computer = new Computer();
-            computer.entity = this;
+            computer.getBindings().put("golem",new GolemAPI(this));
             dataManager.set(terminalIdParameter, computer.terminal.id);
         }
     }
