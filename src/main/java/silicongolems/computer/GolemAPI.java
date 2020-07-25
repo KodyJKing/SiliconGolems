@@ -1,8 +1,5 @@
 package silicongolems.computer;
 
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8Object;
-import com.eclipsesource.v8.utils.V8ObjectUtils;
 import net.minecraft.block.Block;
 import net.minecraft.entity.MoverType;
 import net.minecraft.item.ItemStack;
@@ -243,7 +240,7 @@ public class GolemAPI {
     @Override
     @HostAccess.Export
     public String toString() {
-        return "golem" + Integer.toString(golem.getEntityId());
+        return "Golem" + Integer.toString(golem.getEntityId());
     }
 
     private BlockPos relPos(int forward, int up, int right) {

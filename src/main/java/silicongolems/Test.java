@@ -69,30 +69,15 @@ public class Test {
     }
 
     private static void graal() {
-//        try {
-//            System.out.println(
-//                System.getProperty("user.dir")
-//            );
-//            ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
-//
-//            Foo foo = new Foo();
-//            engine.getBindings(ScriptContext.ENGINE_SCOPE).put("foo", foo);
-//
-//            Thread notifyThread = new Thread(() -> {
-//                try {
-//                    Thread.sleep(1000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                System.out.println("About to notify");
-//                synchronized (foo) { foo.notify(); }
-//            });
-//            notifyThread.start();
-//
-//            engine.eval("foo.await(); print('Done!')");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        try {
+            System.out.println(
+                System.getProperty("user.dir")
+            );
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
+            engine.eval("let r = /a/g; let rep = '123'.replace(/3/g, 'three'); print(rep)");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 //        try {
 //            Context c = Context.newBuilder("js")
@@ -104,19 +89,5 @@ public class Test {
 //            e.printStackTrace();
 //        }
     }
-//
-//    public static class Foo {
-//        @HostAccess.Export
-//        public void await() {
-//            try {
-//                System.out.println("about to wait");
-//                synchronized (this) {
-//                    wait();
-//                }
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 
 }
