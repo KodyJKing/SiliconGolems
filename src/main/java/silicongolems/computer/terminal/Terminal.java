@@ -23,7 +23,7 @@ public class Terminal {
     private boolean dirty = false;
     private Computer computer;
 
-    public State state;
+    private State state;
     public static class State {
         public TextBuffer text;
         public int cursorX = 0;
@@ -74,6 +74,8 @@ public class Terminal {
     public void input(KeyboardEvent event) {
         ModPacketHandler.INSTANCE.sendToServer(new SMInput(id, event));
     }
+
+    public boolean isLoaded() { return state != null; }
 
     public void onClientOpen() {
         ModPacketHandler.INSTANCE.sendToServer(new SMSetUser(id, true));
@@ -165,7 +167,7 @@ public class Terminal {
             }
 
             public void runServer(MessageContext ctx) {
-                System.out.println(Util.gson.toJson(this));
+//                System.out.println(Util.gson.toJson(this));
                 Terminal terminal = TerminalRegistry.getInstance(Side.SERVER, id);
                 if (terminal != null)
                     terminal.computer.queueEvent(event);
@@ -193,8 +195,11 @@ public class Terminal {
         }
 
         public static void registerPackets() {
+            System.out.println("Registering CMUpdate");
             ModPacketHandler.registerPacket(CMUpdate.class, Side.CLIENT);
+            System.out.println("Registering SMInput");
             ModPacketHandler.registerPacket(SMInput.class, Side.SERVER);
+            System.out.println("Registering SMSetUser");
             ModPacketHandler.registerPacket(SMSetUser.class, Side.SERVER);
         }
     // endregion

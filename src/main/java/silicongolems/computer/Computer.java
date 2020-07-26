@@ -13,9 +13,16 @@ import javax.script.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/* TODO: 
+    - Figure out why repl freezes when holding down enter (and maybe other keys).
+    Maybe the fast repeated keyboard events may be putting the threads into a deadlock?
+    - Make sure threads don't get stuck waiting.
+*/
 public class Computer {
     private Thread programThread;
     private boolean isRunning = false;
+    private boolean isDestroyed = false;
+    private boolean justStarted = true;
     private Bindings bindings = new SimpleBindings();
     private Deque<Runnable> jobs = new ArrayDeque<>();
     private Deque<Event> events = new ArrayDeque<>();
@@ -30,68 +37,100 @@ public class Computer {
         Bindings bindings = new SimpleBindings();
         bindings.put("terminal", new TerminalAPI(terminal));
         bindings.put("os", new API());
-        if (this.bindings != null) bindings.putAll(this.bindings);
+        if (this.bindings != null)
+            bindings.putAll(this.bindings);
         return bindings;
     }
 
     public class API {
         @HostAccess.Export
-        public void sleep(int milis) throws InterruptedException { Thread.sleep(milis); }
+        public void sleep(int milis) throws InterruptedException {
+            Thread.sleep(milis);
+        }
+
         @HostAccess.Export
-        public void exit() { Computer.this.killProcess(); }
+        public void exit() {
+            Computer.this.killProcess();
+        }
+
         @HostAccess.Export
-        public void log(Object o) { System.out.println(Util.gson.toJson(o)); }
+        public void log(Object obj) {
+            System.out.println(obj == null ? "null" : obj.toString());
+        }
+
         @HostAccess.Export
         public Event awaitEvent() {
             boolean empty;
-            synchronized (events) { empty = events.isEmpty(); }
+            synchronized (events) {
+                empty = events.isEmpty();
+            }
             if (empty) {
                 synchronized (events) {
                     try {
                         events.wait();
                     } catch (InterruptedException e) {
+                        events.notify();
                         throw new ScriptRuntimeException(e);
                     }
                 }
             }
-            synchronized (events) { return events.removeLast(); }
+            synchronized (events) {
+                return events.removeLast();
+            }
+        }
+
+        @HostAccess.Export
+        public Event dequeueEvent() {
+            synchronized (events) {
+                if (events.isEmpty())
+                    return null;
+                return events.getFirst();
+            }
         }
     }
 
     // region operation
     private void startScript() {
-        String script = Util.getResource("/assets/silicongolems/js/edit.js");
+        String script = Util.getResource("/assets/silicongolems/js/js.js");
         runScript(script);
     }
 
+    private static int threadCounter = 0;
+
     private void runScript(String script) {
-        if (programThread != null) stopScript();
+        if (programThread != null)
+            killProcess();
+        if (isDestroyed)
+            return;
         programThread = new Thread(() -> {
-            ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
-            engine.setBindings(createBindingsInstance(), ScriptContext.ENGINE_SCOPE);
+            Context ctx = Context.newBuilder().option("js.strict", "false").build();
+            Bindings api = createBindingsInstance();
+            api.forEach((key, val) -> ctx.getBindings("js").putMember(key, val));
+
+            // ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
+            // engine.setBindings(createBindingsInstance(), ScriptContext.ENGINE_SCOPE);
             try {
                 isRunning = true;
-                engine.eval(script);
-            } catch (ScriptException e) {
+                ctx.eval("js", script);
+                // engine.eval(script);
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 isRunning = false;
             }
         });
+        programThread.setName("JSThread" + threadCounter++);
         programThread.start();
-    }
-
-    private void stopScript() {
-        isRunning = false;
-        programThread.interrupt();
     }
 
     public void update() {
         if (terminal != null)
             terminal.update();
 
-        if (!isRunning())
+        if (justStarted) {
+            justStarted = false;
             startScript();
+        }
 
         if (awaitingUpdate()) {
             synchronized (programThread) {
@@ -130,26 +169,37 @@ public class Computer {
         return programThread != null && programThread.getState() == Thread.State.WAITING;
     }
 
-    // This is used to impose recovery time after performing certain tasks like moving a golem.
+    // This is used to impose recovery time after performing certain tasks like
+    // moving a golem.
     // I should probably add a special object to wait/notify on.
-    public void awaitUpdate(int sleepMilis) throws InterruptedException {
+    public void awaitUpdate(int sleepMilis) {
         synchronized (programThread) {
+            try {
                 if (sleepMilis > 0)
                     Thread.sleep(sleepMilis);
                 programThread.wait();
+            } catch (InterruptedException exception) {
+                programThread.notify();
+                throw new ScriptRuntimeException(exception);
+            }
         }
     }
 
     public void onDestroy() {
+        isDestroyed = true;
         killProcess();
         terminal.onDestroy();
     }
 
     public void killProcess() {
-        if (programThread == null)
-            return;
-        synchronized (programThread) {
-            stopScript();
+        isRunning = false;
+        if (programThread != null) {
+            programThread.stop();
+//            Thread monitor = new Thread(() -> {
+//                synchronized (programThread) {
+//                }
+//            });
+//            monitor.setName("MonitorThread");
         }
     }
     // endregion

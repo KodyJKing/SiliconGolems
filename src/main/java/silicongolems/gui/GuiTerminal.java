@@ -27,7 +27,7 @@ public class GuiTerminal extends GuiScreenText {
 
     @Override
     public void drawTextRegion() {
-        if (terminal == null || terminal.state == null) return;
+        if (terminal == null || !terminal.isLoaded()) return;
         try {
             int maxY = Math.min(getTextHeight(), Terminal.HEIGHT);
             int maxX = Math.min(getTextWidth(), Terminal.WIDTH);
