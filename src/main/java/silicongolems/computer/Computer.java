@@ -35,7 +35,7 @@ public class Computer {
 
     private Bindings createBindingsInstance() {
         Bindings bindings = new SimpleBindings();
-        bindings.put("terminal", new TerminalAPI(terminal));
+        bindings.put("terminal", new TerminalAPI(terminal, this));
         bindings.put("os", new API());
         if (this.bindings != null)
             bindings.putAll(this.bindings);
