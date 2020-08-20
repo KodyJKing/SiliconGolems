@@ -13,11 +13,6 @@ import javax.script.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-/* TODO: 
-    - Figure out why repl freezes when holding down enter (and maybe other keys).
-    Maybe the fast repeated keyboard events may be putting the threads into a deadlock?
-    - Make sure threads don't get stuck waiting.
-*/
 public class Computer {
     private Thread programThread;
     private boolean isRunning = false;
@@ -84,7 +79,7 @@ public class Computer {
             synchronized (events) {
                 if (events.isEmpty())
                     return null;
-                return events.getFirst();
+                return events.removeFirst();
             }
         }
     }
