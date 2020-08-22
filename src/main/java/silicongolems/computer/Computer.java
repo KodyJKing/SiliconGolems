@@ -64,8 +64,7 @@ public class Computer {
                     try {
                         events.wait();
                     } catch (InterruptedException e) {
-                        events.notify();
-                        throw new ScriptRuntimeException(e);
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
@@ -164,8 +163,7 @@ public class Computer {
         return programThread != null && programThread.getState() == Thread.State.WAITING;
     }
 
-    // This is used to impose recovery time after performing certain tasks like
-    // moving a golem.
+    // This is used to impose recovery time after performing certain tasks like moving a golem.
     // I should probably add a special object to wait/notify on.
     public void awaitUpdate(int sleepMilis) {
         synchronized (programThread) {
@@ -174,8 +172,7 @@ public class Computer {
                     Thread.sleep(sleepMilis);
                 programThread.wait();
             } catch (InterruptedException exception) {
-                programThread.notify();
-                throw new ScriptRuntimeException(exception);
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -189,7 +186,7 @@ public class Computer {
     public void killProcess() {
         isRunning = false;
         if (programThread != null) {
-            programThread.stop();
+            programThread.interrupt();
 //            Thread monitor = new Thread(() -> {
 //                synchronized (programThread) {
 //                }
