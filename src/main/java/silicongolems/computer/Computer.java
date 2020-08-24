@@ -185,14 +185,8 @@ public class Computer {
 
     public void killProcess() {
         isRunning = false;
-        if (programThread != null) {
+        if (programThread != null)
             programThread.interrupt();
-//            Thread monitor = new Thread(() -> {
-//                synchronized (programThread) {
-//                }
-//            });
-//            monitor.setName("MonitorThread");
-        }
     }
     // endregion
 
