@@ -1,5 +1,6 @@
 package silicongolems;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,7 +18,9 @@ import silicongolems.item.ModItems;
 import silicongolems.network.ModPacketHandler;
 import silicongolems.proxy.CommonProxy;
 
-@Mod(modid = SiliconGolems.modId, version = SiliconGolems.version, acceptedMinecraftVersions = "[1.12.2]")
+import javax.script.ScriptEngineManager;
+
+@Mod(modid = SiliconGolems.modId, version = SiliconGolems.version, acceptedMinecraftVersions = "[1.12.2]", name = "Silicon Golems")
 public class SiliconGolems
 {
     public static final String modId = "silicongolems";
@@ -35,7 +38,6 @@ public class SiliconGolems
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         System.out.println(name + " is loading!");
-
         if ((boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment"))
             devEnv = true;
 

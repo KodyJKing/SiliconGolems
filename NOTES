@@ -1,0 +1,6 @@
+I'm thinking it might be a good idea to implement a graal custom file system.
+    pros:
+        - I don't have to reinvent module loading.
+        - I can use graal's standard file io functions.
+    cons:
+        - Users would have to use the ".mjs" extension which is not standard.

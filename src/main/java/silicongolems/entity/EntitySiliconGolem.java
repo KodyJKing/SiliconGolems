@@ -5,7 +5,6 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
@@ -14,26 +13,21 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.network.play.server.SPacketEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import silicongolems.SiliconGolems;
+import silicongolems.computer.GolemAPI;
+import silicongolems.gui.ModGuiHandler;
 import silicongolems.inventory.InventorySiliconGolem;
 import silicongolems.util.Util;
 import silicongolems.computer.Computer;
-import silicongolems.computer.Computers;
-import silicongolems.gui.ModGuiHandler;
 import silicongolems.item.ModItems;
 import silicongolems.network.MessageHeading;
-import silicongolems.network.MessageOpenComputer;
 import silicongolems.network.ModPacketHandler;
 
 import javax.annotation.Nullable;
@@ -41,64 +35,52 @@ import java.util.UUID;
 
 public class EntitySiliconGolem extends EntityLiving {
 
+    public static final DataParameter<Integer> terminalIdParameter = EntityDataManager.createKey(EntitySiliconGolem.class, DataSerializers.VARINT);
+
     public boolean rotationDirty = false;
     public int attackTime = 0;
-
     boolean justSpawned = true;
-
     public Computer computer;
     private FakePlayer fakePlayer;
-
     public InventorySiliconGolem inventory;
-
-    public static final DataParameter<Integer> computerIdParameter = EntityDataManager.createKey(EntitySiliconGolem.class, DataSerializers.VARINT);
 
     public EntitySiliconGolem(World world) {
         super(world);
         this.setSize(1.4F * 0.5F, 1);
         inventory = new InventorySiliconGolem(this);
         if (!world.isRemote) {
-            computer = Computers.add(new Computer(world));
-            computer.entity = this;
+            computer = new Computer();
+            computer.getBindings().put("golem",new GolemAPI(this));
+            dataManager.set(terminalIdParameter, computer.terminal.id);
         }
     }
 
     @Override
     protected void entityInit() {
         super.entityInit();
-        this.dataManager.register(computerIdParameter, -1);
+        dataManager.register(terminalIdParameter, -1);
     }
 
     // region Primary
     @Override
     protected boolean processInteract(EntityPlayer player, EnumHand hand) {
-        if (world.isRemote)
+        if (!world.isRemote)
             return true;
-
-        ItemStack stack = player.getHeldItem(hand);
-
-        if (!player.isSneaking() && computer.canOpen(player)) {
-            computer.user = (EntityPlayerMP) player;
-            ModPacketHandler.INSTANCE.sendTo(new MessageOpenComputer(computer), (EntityPlayerMP) player);
-        } else if (player.isSneaking()) {
-            player.openGui(SiliconGolems.instance, 1, world, getEntityId(), (int) player.posY, (int) player.posZ);
-        }
-
+        if (!player.isSneaking())
+            ModGuiHandler.openTerminal(player,dataManager.get(terminalIdParameter));
+        else
+            ModGuiHandler.openGolemInv(player, this);
         return true;
     }
 
     @Override
     public void onDeath(DamageSource cause) {
         super.onDeath(cause);
-
         if (world.isRemote)
             return;
-
         computer.killProcess();
-
         ItemStack drop = new ItemStack(ModItems.siliconGolem, 1);
         drop.setTagCompound(writeToNBT(new NBTTagCompound()));
-
         InventoryHelper.spawnItemStack(world, posX, posY, posZ, drop);
     }
 
@@ -110,24 +92,21 @@ public class EntitySiliconGolem extends EntityLiving {
         computer.onDestroy();
     }
 
+
     @Override
     public void onEntityUpdate() {
         super.onEntityUpdate();
-
         renderYawOffset = rotationYaw;
-
         if (!world.isRemote) {
             if (justSpawned) {
                 justSpawned = false;
-                computer.runProgram("startup");
             }
-            computer.updateComputer();
+            computer.update();
             if (rotationDirty) {
                 ModPacketHandler.INSTANCE.sendToAllTracking(new MessageHeading(this), this);
                 rotationDirty = false;
             }
         }
-
     }
 
     @Override

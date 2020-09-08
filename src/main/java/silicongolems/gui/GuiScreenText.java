@@ -20,11 +20,11 @@ public class GuiScreenText extends GuiScreen {
     private int editorHeight = 166;
     private int boarderWidth = 8;
 
-    private int textWidth = 77;//38;
-    private int textHeight = 37;//18;
+    private int textWidth = 77;
+    private int textHeight = 37;
 
-    private int charWidth = 3;//6;
-    private int charHeight = 4;//8;
+    private int charWidth = 3;
+    private int charHeight = 4;
 
     public int invTextScale = 2;
 
@@ -91,16 +91,17 @@ public class GuiScreenText extends GuiScreen {
             System.out.println("Texture manager reference is null!");
             return;
         }
-
-        this.drawDefaultBackground();
-
+        drawDefaultBackground();
         GlStateManager.color(1, 1, 1, 1);
         mc.getTextureManager().bindTexture(textGuiTextures);
         int x = cornerX();
         int y = cornerY();
         this.drawTexturedModalRect(x, y, 0, 0, this.getEditorWidth(), this.getEditorHeight());
         super.drawScreen(mouseX, mouseY, partialTicks);
+        drawTextRegion();
     }
+
+    public void drawTextRegion() {}
 
     @Override
     public boolean doesGuiPauseGame() {
@@ -111,7 +112,7 @@ public class GuiScreenText extends GuiScreen {
     public void keyTyped(char c, int keyCode) throws IOException {
         boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL);
 
-        //System.out.println(keyCode); //Comment me out!
+        //System.out.println(keyCode);
 
         if (isKeyComboCtrlT(keyCode))
             onCtrlT();
@@ -164,9 +165,7 @@ public class GuiScreenText extends GuiScreen {
     public void onClickCell(int x, int y, int button) {}
     public void onCtrlT() {}
 
-    public int getEditorWidth() {
-        return editorWidth;
-    }
+    public int getEditorWidth() { return editorWidth; }
     public int getEditorHeight() {
         return editorHeight;
     }

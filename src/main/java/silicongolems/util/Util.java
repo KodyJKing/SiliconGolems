@@ -3,10 +3,16 @@ package silicongolems.util;
 import com.google.gson.Gson;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagByteArray;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatAllowedCharacters;
+import silicongolems.SiliconGolems;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -81,5 +87,36 @@ public class Util {
 
     public static double roundTo(double val, double round) {
         return Math.round(val / round) * round;
+    }
+
+    public static int mod(int dividend, int divisor) {
+        int result = dividend % divisor;
+        if (result < 0) result += divisor;
+        return result;
+    }
+
+    public static String getResource(String path) {
+        try {
+            try (
+                    InputStream stream = Util.class.getResourceAsStream(path);
+                    InputStreamReader reader = new InputStreamReader(stream);
+                    BufferedReader br = new BufferedReader(reader);
+            ) {
+                return Util.readAll(br);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String readAll(BufferedReader reader) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        String line;
+        while((line = reader.readLine()) != null) {
+            builder.append(line);
+            builder.append('\n');
+        }
+        return builder.toString();
     }
 }

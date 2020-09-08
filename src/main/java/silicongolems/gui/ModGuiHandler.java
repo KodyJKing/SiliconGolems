@@ -6,13 +6,14 @@ import net.minecraft.inventory.ContainerChest;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
-import silicongolems.computer.Computer;
+import net.minecraftforge.fml.relauncher.Side;
+import silicongolems.SiliconGolems;
+import silicongolems.computer.terminal.TerminalRegistry;
 import silicongolems.entity.EntitySiliconGolem;
-import silicongolems.gui.window.WindowEditor;
 
 public class ModGuiHandler implements IGuiHandler {
-
-    public static Computer activeComputer;
+    private static final int TERMINAL = 0;
+    private static final int GOLEM_INVENTORY = 1;
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
@@ -25,10 +26,10 @@ public class ModGuiHandler implements IGuiHandler {
     }
 
     public Object getGuiElement(int ID, EntityPlayer player, World world, BlockPos pos, boolean serverSide) {
-        if (ID == 0 && !serverSide)
-            return new GuiScreenOS(activeComputer);
+        if (ID == TERMINAL && !serverSide)
+            return new GuiTerminal(TerminalRegistry.getInstance(Side.CLIENT, pos.getX(), true));
 
-        if (ID == 1)
+        if (ID == GOLEM_INVENTORY)
             return golemInvGui(player, serverSide, pos.getX());
 
         return null;
@@ -41,5 +42,13 @@ public class ModGuiHandler implements IGuiHandler {
             return new ContainerChest(player.inventory, golem.inventory, player);
         else
             return new GuiChest(player.inventory, golem.inventory);
+    }
+
+    public static void openTerminal(EntityPlayer player, int terminalId) {
+        player.openGui(SiliconGolems.instance, TERMINAL, player.world, terminalId, 0, 0);
+    }
+
+    public static void openGolemInv(EntityPlayer player, EntitySiliconGolem entity) {
+        player.openGui(SiliconGolems.instance, GOLEM_INVENTORY, player.world, entity.getEntityId(), 0, 0);
     }
 }
