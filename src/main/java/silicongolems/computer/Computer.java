@@ -1,10 +1,11 @@
 package silicongolems.computer;
 
-import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import net.minecraft.nbt.NBTTagCompound;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
-import silicongolems.SiliconGolems;
+import org.graalvm.polyglot.Value;
+import silicongolems.computer.filesystem.AssetFileSystem;
+import silicongolems.computer.filesystem.FileSystemAPI;
 import silicongolems.computer.terminal.Terminal;
 import silicongolems.computer.terminal.TerminalAPI;
 import silicongolems.util.Util;
@@ -28,7 +29,7 @@ public class Computer {
         return bindings;
     }
 
-    private Bindings createBindingsInstance() {
+    private Bindings createBindings() {
         Bindings bindings = new SimpleBindings();
         bindings.put("terminal", new TerminalAPI(terminal, this));
         bindings.put("os", new API());
@@ -81,6 +82,9 @@ public class Computer {
                 return events.removeFirst();
             }
         }
+
+        @HostAccess.Export
+        public FileSystemAPI fs = new FileSystemAPI(new AssetFileSystem());
     }
 
     // region operation
@@ -90,7 +94,6 @@ public class Computer {
     }
 
     private static int threadCounter = 0;
-
     private void runScript(String script) {
         if (programThread != null)
             killProcess();
@@ -98,15 +101,17 @@ public class Computer {
             return;
         programThread = new Thread(() -> {
             Context ctx = Context.newBuilder().option("js.strict", "false").build();
-            Bindings api = createBindingsInstance();
-            api.forEach((key, val) -> ctx.getBindings("js").putMember(key, val));
+            Value bindings = ctx.getBindings("js");
+            Bindings api = createBindings();
+            api.forEach((key, val) -> bindings.putMember(key, val));
 
-            // ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
-            // engine.setBindings(createBindingsInstance(), ScriptContext.ENGINE_SCOPE);
+//             ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
+//             engine.setBindings(new SimpleBindings(), ScriptContext.GLOBAL_SCOPE);
+//             engine.setBindings(createBindings(), ScriptContext.ENGINE_SCOPE);
             try {
                 isRunning = true;
                 ctx.eval("js", script);
-                // engine.eval(script);
+//              engine.eval(script);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -126,10 +131,8 @@ public class Computer {
             startScript();
         }
 
-        if (awaitingUpdate()) {
-            synchronized (programThread) {
-                programThread.notify();
-            }
+        synchronized (programThread) {
+            programThread.notify();
         }
 
         synchronized (jobs) {
@@ -138,33 +141,11 @@ public class Computer {
         }
     }
 
-    public void addJob(Runnable job) {
-        if (isRunning()) {
-            synchronized (jobs) {
-                jobs.addFirst(job);
-            }
-        }
-    }
-
-    public void queueEvent(Event event) {
-        if (isRunning()) {
-            synchronized (events) {
-                events.addFirst(event);
-                events.notify();
-            }
-        }
-    }
-
     private boolean isRunning() {
         return programThread != null && isRunning && programThread.isAlive();
     }
 
-    private boolean awaitingUpdate() {
-        return programThread != null && programThread.getState() == Thread.State.WAITING;
-    }
-
     // This is used to impose recovery time after performing certain tasks like moving a golem.
-    // I should probably add a special object to wait/notify on.
     public void awaitUpdate(int sleepMilis) {
         synchronized (programThread) {
             try {
@@ -174,6 +155,27 @@ public class Computer {
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
             }
+        }
+    }
+
+    public void addJob(Runnable job) {
+        if (isRunning()) {
+            synchronized (jobs) {
+                jobs.addFirst(job);
+            }
+        } else {
+            System.out.print("Tried to add job after program was told to terminate.");
+        }
+    }
+
+    public void queueEvent(Event event) {
+        if (isRunning()) {
+            synchronized (events) {
+                events.addFirst(event);
+                events.notify();
+            }
+        } else {
+            System.out.print("Tried to queue event after program was told to terminate.");
         }
     }
 

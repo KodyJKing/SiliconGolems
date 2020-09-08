@@ -45,7 +45,6 @@ public class TerminalAPI {
 
     @HostAccess.Export
     public void print(Object obj) {
-        System.out.println(obj);
         String str = obj == null ? "null" : obj.toString();
         for (String line : Util.printableLines(str, Terminal.WIDTH)) {
             setShift(getShift() + 1);

@@ -1,22 +1,15 @@
 package silicongolems;
 
-import com.oracle.truffle.js.parser.GraalJSEvaluator;
-import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.ResourceLimits;
+import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.Value;
 import silicongolems.computer.TextBuffer;
 import silicongolems.util.RunLengthEncoding;
-import silicongolems.util.Util;
 
-import javax.script.Bindings;
-import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.nio.charset.Charset;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class Test {
 
@@ -24,7 +17,8 @@ public class Test {
 //        textBuffer();
 //        runLengthEncoding();
 //        autoSerialize();
-        graal();
+//        graal();
+        graalModules();
     }
 
     private static void textBuffer() {
@@ -88,6 +82,18 @@ public class Test {
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
+    }
+
+    private static void graalModules() {
+    try {
+            Context ctx = Context.newBuilder().allowAllAccess(true).option("js.strict", "false").build();
+            String module = "function bar() { print('Hello modules!') }";
+            String importScript = "load({script:@0, name:'foo.mjs'})".replace("@0", module);
+            ctx.eval("js", importScript);
+            ctx.eval("js", "bar()");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
